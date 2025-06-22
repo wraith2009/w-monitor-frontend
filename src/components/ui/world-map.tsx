@@ -1,11 +1,7 @@
-import type React from "react";
-
-import { useRef, useState } from "react";
-import { motion } from "motion/react";
+import React, { useRef, useState, useCallback, useMemo } from "react";
 import DottedMap from "dotted-map";
-import { useTheme } from "next-themes";
 
-interface RegionData {
+export interface RegionData {
   lat: number;
   lng: number;
   label: string;
@@ -14,286 +10,256 @@ interface RegionData {
   status: "up" | "down" | "degraded";
 }
 
-interface MapProps {
-  regions?: RegionData[];
-  lineColor?: string;
-  dots?: Array<{
-    start: { lat: number; lng: number; label?: string };
-    end: { lat: number; lng: number; label?: string };
-  }>;
+interface Connection {
+  start: { lat: number; lng: number };
+  end: { lat: number; lng: number };
 }
 
-export function WorldMap({
-  regions = [],
+interface WorldMapProps {
+  regions: RegionData[];
+  connections: Connection[];
+  lineColor?: string;
+}
+
+export default function WorldMap({
+  regions,
+  connections,
   lineColor = "#0ea5e9",
-  dots = [],
-}: MapProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
+}: WorldMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [hoveredRegion, setHoveredRegion] = useState<RegionData | null>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const map = new DottedMap({ height: 100, grid: "diagonal" });
+  const [hovered, setHovered] = useState<RegionData | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  const { theme } = useTheme();
+  const svgMap = useMemo(() => {
+    const map = new DottedMap({ height: 100, grid: "diagonal" });
+    return map.getSVG({
+      radius: 0.22,
+      color: "#FFFFFF20",
+      shape: "circle",
+      backgroundColor: "#161616",
+    });
+  }, []);
 
-  const svgMap = map.getSVG({
-    radius: 0.22,
-    color: theme === "dark" ? "#FFFFFF20" : "#00000040",
-    shape: "circle",
-    backgroundColor: theme === "dark" ? "#161616" : "white",
-  });
+  const project = useCallback(
+    (lat: number, lng: number) => ({
+      x: (lng + 180) * (800 / 360),
+      y: (90 - lat) * (400 / 180),
+    }),
+    []
+  );
 
-  const projectPoint = (lat: number, lng: number) => {
-    const x = (lng + 180) * (800 / 360);
-    const y = (90 - lat) * (400 / 180);
-    return { x, y };
-  };
+  const curve = useCallback(
+    (a: { x: number; y: number }, b: { x: number; y: number }) => {
+      const mx = (a.x + b.x) / 2;
+      const my = Math.min(a.y, b.y) - 50;
+      return `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`;
+    },
+    []
+  );
 
-  const createCurvedPath = (
-    start: { x: number; y: number },
-    end: { x: number; y: number }
-  ) => {
-    const midX = (start.x + end.x) / 2;
-    const midY = Math.min(start.y, end.y) - 50;
-    return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
-  };
+  const statusColor = useCallback((status: string, uptime: number) => {
+    if (status === "down") return "#ef4444";
+    if (status === "degraded" || uptime < 99.5) return "#f59e0b";
+    return "#10b981";
+  }, []);
 
-  const getStatusColor = (status: string, uptime: number) => {
-    if (status === "down") return "#ef4444"; // red
-    if (status === "degraded" || uptime < 99.5) return "#f59e0b"; // yellow
-    return "#10b981"; // green
-  };
+  const updateMouse = useCallback((e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setMousePos({ x, y });
+  }, []);
 
-  const handleMouseMove = (event: React.MouseEvent) => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      setMousePosition({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-      });
-    }
-  };
+  const getTooltipStyle = useCallback(() => {
+    if (!containerRef.current) return {};
+    const { width: cw, height: ch } =
+      containerRef.current.getBoundingClientRect();
+    const tw = 200;
+    const th = 120;
+    let left = mousePos.x + 15;
+    let top = mousePos.y - th / 2;
 
-  const handleRegionHover = (region: RegionData, event: React.MouseEvent) => {
-    setHoveredRegion(region);
-    handleMouseMove(event);
-  };
+    if (left + tw > cw) left = mousePos.x - tw - 15;
+    if (top < 0) top = mousePos.y + 15;
+    if (top + th > ch) top = ch - th - 15;
 
-  const handleRegionLeave = () => {
-    setHoveredRegion(null);
-  };
+    return { left, top };
+  }, [mousePos]);
+
+  const handleRegionMouseEnter = useCallback(
+    (region: RegionData, e: React.MouseEvent) => {
+      setHovered(region);
+      updateMouse(e);
+    },
+    [updateMouse]
+  );
+
+  const handleRegionMouseLeave = useCallback(() => {
+    setHovered(null);
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      className="w-full aspect-[2/1] bg-[#161616] rounded-lg relative font-sans overflow-hidden"
-      onMouseMove={handleMouseMove}
+      className="w-full aspect-[2/1] bg-gray-900 rounded-lg relative overflow-hidden border border-gray-700"
     >
       <img
         src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
-        className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
-        alt="world map"
-        height="495"
-        width="1056"
+        className="absolute inset-0 w-full h-full opacity-60 select-none pointer-events-none"
+        alt="dotted world"
         draggable={false}
       />
 
       <svg
-        ref={svgRef}
         viewBox="0 0 800 400"
-        className="w-full h-full absolute inset-0 select-none"
+        className="w-full h-full absolute inset-0"
+        style={{ pointerEvents: "none" }}
       >
-        {/* Connection lines */}
-        {dots.map((dot, i) => {
-          const startPoint = projectPoint(dot.start.lat, dot.start.lng);
-          const endPoint = projectPoint(dot.end.lat, dot.end.lng);
-          return (
-            <g key={`path-group-${i}`}>
-              <motion.path
-                d={createCurvedPath(startPoint, endPoint)}
-                fill="none"
-                stroke="url(#path-gradient)"
-                strokeWidth="1"
-                initial={{
-                  pathLength: 0,
-                }}
-                animate={{
-                  pathLength: 1,
-                }}
-                transition={{
-                  duration: 1,
-                  delay: 0.5 * i,
-                  ease: "easeOut",
-                }}
-                className="pointer-events-none"
-              />
-            </g>
-          );
-        })}
-
         <defs>
-          <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="path-grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="white" stopOpacity="0" />
             <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
             <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
             <stop offset="100%" stopColor="white" stopOpacity="0" />
           </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* Connection dots */}
-        {dots.map((dot, i) => (
-          <g key={`points-group-${i}`} className="pointer-events-none">
-            <g key={`start-${i}`}>
-              <circle
-                cx={projectPoint(dot.start.lat, dot.start.lng).x}
-                cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                r="2"
-                fill={lineColor}
+        {/* Animated curves */}
+        {connections.map((c, i) => {
+          const a = project(c.start.lat, c.start.lng);
+          const b = project(c.end.lat, c.end.lng);
+          return (
+            <path
+              key={i}
+              d={curve(a, b)}
+              fill="none"
+              stroke="url(#path-grad)"
+              strokeWidth="2"
+              opacity="0.8"
+              style={{ pointerEvents: "none" }}
+            >
+              <animate
+                attributeName="stroke-dasharray"
+                values="0,1000;1000,1000"
+                dur="3s"
+                begin={`${i * 0.5}s`}
+                repeatCount="indefinite"
               />
-              <circle
-                cx={projectPoint(dot.start.lat, dot.start.lng).x}
-                cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                r="2"
-                fill={lineColor}
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  from="2"
-                  to="8"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  from="0.5"
-                  to="0"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
-            <g key={`end-${i}`}>
-              <circle
-                cx={projectPoint(dot.end.lat, dot.end.lng).x}
-                cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                r="2"
-                fill={lineColor}
-              />
-              <circle
-                cx={projectPoint(dot.end.lat, dot.end.lng).x}
-                cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                r="2"
-                fill={lineColor}
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  from="2"
-                  to="8"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  from="0.5"
-                  to="0"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
-          </g>
-        ))}
+            </path>
+          );
+        })}
 
-        {/* Region status indicators */}
-        {regions.map((region, i) => {
-          const point = projectPoint(region.lat, region.lng);
-          const statusColor = getStatusColor(region.status, region.uptime);
+        {/* Regions */}
+        {regions.map((r, i) => {
+          const pt = project(r.lat, r.lng);
+          const color = statusColor(r.status, r.uptime);
+          const isHover = hovered?.label === r.label;
 
           return (
-            <g key={`region-${i}`}>
-              {/* Invisible larger circle for better hover detection */}
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r="12"
-                fill="transparent"
-                className="cursor-pointer"
-                onMouseEnter={(e) => handleRegionHover(region, e)}
-                onMouseLeave={handleRegionLeave}
-                onMouseMove={handleMouseMove}
-              />
-
-              {/* Main status circle */}
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r="4"
-                fill={statusColor}
-                className="pointer-events-none"
-              />
-
-              {/* Pulsing animation for active regions */}
-              {region.status === "up" && (
+            <g key={i}>
+              {/* Hover effect circle */}
+              {isHover && (
                 <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r="4"
-                  fill={statusColor}
-                  opacity="0.6"
-                  className="pointer-events-none"
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={15}
+                  fill={color}
+                  opacity={0.2}
+                  style={{ pointerEvents: "none" }}
                 >
                   <animate
                     attributeName="r"
-                    from="4"
-                    to="12"
-                    dur="2s"
-                    begin="0s"
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="opacity"
-                    from="0.6"
-                    to="0"
-                    dur="2s"
-                    begin="0s"
+                    values="15;20;15"
+                    dur="1s"
                     repeatCount="indefinite"
                   />
                 </circle>
               )}
 
-              {/* Warning pulse for degraded regions */}
-              {region.status === "degraded" && (
+              {/* Main region circle */}
+              <circle
+                cx={pt.x}
+                cy={pt.y}
+                r={isHover ? 6 : 4}
+                fill={color}
+                filter="url(#glow)"
+                style={{ pointerEvents: "auto", cursor: "pointer" }}
+                onMouseEnter={(e) => handleRegionMouseEnter(r, e)}
+                onMouseMove={updateMouse}
+                onMouseLeave={handleRegionMouseLeave}
+              />
+
+              {/* Status animations */}
+              {r.status === "up" && (
                 <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r="4"
-                  fill={statusColor}
-                  opacity="0.8"
-                  className="pointer-events-none"
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={4}
+                  fill={color}
+                  opacity={0.6}
+                  style={{ pointerEvents: "none" }}
                 >
                   <animate
                     attributeName="r"
-                    from="4"
-                    to="10"
-                    dur="1s"
-                    begin="0s"
+                    values="4;12;4"
+                    dur="3s"
                     repeatCount="indefinite"
                   />
                   <animate
                     attributeName="opacity"
-                    from="0.8"
-                    to="0"
-                    dur="1s"
-                    begin="0s"
+                    values="0.6;0;0.6"
+                    dur="3s"
                     repeatCount="indefinite"
                   />
                 </circle>
+              )}
+
+              {r.status === "degraded" && (
+                <circle
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={4}
+                  fill={color}
+                  opacity={0.8}
+                  style={{ pointerEvents: "none" }}
+                >
+                  <animate
+                    attributeName="r"
+                    values="4;10;4"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.8;0.2;0.8"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              )}
+
+              {/* Region label on hover */}
+              {isHover && (
+                <text
+                  x={pt.x}
+                  y={pt.y - 20}
+                  textAnchor="middle"
+                  className="fill-white text-sm font-semibold"
+                  style={{
+                    filter: "drop-shadow(1px 1px 2px rgba(0,0,0,0.8))",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {r.label}
+                </text>
               )}
             </g>
           );
@@ -301,39 +267,46 @@ export function WorldMap({
       </svg>
 
       {/* Tooltip */}
-      {hoveredRegion && (
+      {hovered && (
         <div
-          className="absolute z-10 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm shadow-lg pointer-events-none border border-gray-700"
+          className="absolute z-20 bg-gray-800/95 backdrop-blur-sm text-white px-4 py-3 rounded-lg text-sm shadow-2xl border border-gray-600 transform transition-all pointer-events-none"
           style={{
-            left:
-              mousePosition.x > 400
-                ? mousePosition.x - 10
-                : mousePosition.x + 10,
-            top: mousePosition.y - 10,
-            transform: mousePosition.x > 400 ? "translateX(-100%)" : "none",
+            width: 200,
+            height: 120,
+            ...getTooltipStyle(),
           }}
         >
-          <div className="font-semibold text-white">{hoveredRegion.label}</div>
-          <div className="text-gray-300 mt-1">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{
-                  backgroundColor: getStatusColor(
-                    hoveredRegion.status,
-                    hoveredRegion.uptime
-                  ),
-                }}
-              />
-              <span>Uptime: {hoveredRegion.uptime}%</span>
+          <div className="font-semibold mb-2 flex items-center gap-2">
+            <span
+              className="w-3 h-3 rounded-full flex-shrink-0"
+              style={{
+                backgroundColor: statusColor(hovered.status, hovered.uptime),
+              }}
+            />
+            {hovered.label}
+          </div>
+          <div className="space-y-1 text-gray-300">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Uptime:</span>
+              <span className="font-medium">{hovered.uptime}%</span>
             </div>
-            <div className="text-gray-400 text-xs mt-1">
-              Response: {hoveredRegion.responseTime}ms
+            <div className="flex justify-between">
+              <span className="text-gray-400">Response:</span>
+              <span className="font-medium">{hovered.responseTime}ms</span>
             </div>
-            <div className="text-gray-400 text-xs">
-              Status:{" "}
-              {hoveredRegion.status.charAt(0).toUpperCase() +
-                hoveredRegion.status.slice(1)}
+            <div className="flex justify-between">
+              <span className="text-gray-400">Status:</span>
+              <span
+                className={`font-medium capitalize ${
+                  hovered.status === "up"
+                    ? "text-green-400"
+                    : hovered.status === "degraded"
+                    ? "text-yellow-400"
+                    : "text-red-400"
+                }`}
+              >
+                {hovered.status}
+              </span>
             </div>
           </div>
         </div>
