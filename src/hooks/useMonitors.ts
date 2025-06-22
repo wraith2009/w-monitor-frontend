@@ -1,4 +1,3 @@
-// src/hooks/useMonitors.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { monitorsApi } from '../api/monitors';
 import { toast } from 'sonner';

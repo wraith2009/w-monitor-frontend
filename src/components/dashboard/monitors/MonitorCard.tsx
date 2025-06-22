@@ -14,8 +14,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import type { Monitor, MonitorStatus } from "@/api/monitors";
 
-const statusConfig = {
+const statusConfig: Record<
+  MonitorStatus,
+  {
+    icon: React.ElementType;
+    color: string;
+    label: string;
+  }
+> = {
   up: { icon: CheckCircle, color: "text-green-400", label: "UP" },
   down: { icon: XCircle, color: "text-red-400", label: "DOWN" },
   degraded: {
@@ -25,23 +33,8 @@ const statusConfig = {
   },
 };
 
-type MonitorStatus = "up" | "down" | "degraded";
-
-interface Monitor {
-  status: MonitorStatus;
-  name: string;
-  url: string;
-  uptime: number;
-  responseTime: number;
-  regions?: string[];
-}
-
 const MonitorCard = ({ monitor }: { monitor: Monitor }) => {
-  const {
-    icon: Icon,
-    color,
-    label,
-  } = statusConfig[monitor.status as MonitorStatus] || {};
+  const { icon: Icon, color, label } = statusConfig[monitor.status ?? "down"]; // fallback if undefined
 
   return (
     <Card className="bg-[#1f1f1f] border-gray-800/50 hover:bg-gray-800/20 transition-colors duration-200 cursor-pointer">
@@ -52,12 +45,12 @@ const MonitorCard = ({ monitor }: { monitor: Monitor }) => {
               variant="secondary"
               className={`bg-gray-800 border ${color}`}
             >
-              <Icon className="w-3 h-3 mr-1" />
+              {Icon && <Icon className="w-3 h-3 mr-1" />}
               {label}
             </Badge>
             <div>
               <h3 className="text-white font-semibold text-lg">
-                {monitor.name}
+                {monitor.websiteName}
               </h3>
               <p className="text-sm text-gray-400">{monitor.url}</p>
             </div>
@@ -82,11 +75,11 @@ const MonitorCard = ({ monitor }: { monitor: Monitor }) => {
           </DropdownMenu>
         </div>
         <div className="flex justify-between text-sm text-gray-400 pt-2">
-          <span>Uptime: {monitor.uptime}%</span>
-          <span>Response: {monitor.responseTime}ms</span>
+          <span>Uptime: {monitor.uptime ?? "--"}%</span>
+          <span>Response: {monitor.responseTime ?? "--"}ms</span>
           <span>
             <Globe className="inline-block w-3 h-3 mr-1" />
-            {monitor.regions && monitor.regions.length} Regions
+            {monitor.regions?.length ?? 0} Regions
           </span>
         </div>
       </CardContent>

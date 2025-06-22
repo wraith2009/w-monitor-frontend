@@ -12,6 +12,7 @@ export const useLogin = () => {
     return useMutation({
         mutationFn: authApi.login,
         onSuccess: (data) => {
+            console.log('Login successful:', data);
             login(data.token, data.user);
             toast.success('Successfully logged in!');
 

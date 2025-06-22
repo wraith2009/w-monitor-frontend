@@ -27,21 +27,37 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#161616] flex">
-      <Sidebar activeScreen={activeScreen} onScreenChange={setActiveScreen} />
+    <div className="min-h-screen w-full bg-[#161616] relative">
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `
+        linear-gradient(to right, rgba(64, 64, 64, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(64, 64, 64, 0.15) 1px, transparent 1px)
+      `,
+          backgroundSize: "32px 32px",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+          maskImage:
+            "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+        }}
+      />
+      <div className="min-h-screen flex">
+        <Sidebar activeScreen={activeScreen} onScreenChange={setActiveScreen} />
 
-      <div className="flex-1 flex flex-col">
-        <Header breadcrumbs={getBreadcrumbs()} />
+        <div className="flex-1 flex flex-col">
+          <Header breadcrumbs={getBreadcrumbs()} />
 
-        <main className="flex-1 p-6">
-          <Routes>
-            <Route index element={<DashboardOverview />} />
-            <Route path="monitors" element={<MonitorsPage />} />
-            {/* <Route path="incidents" element={<IncidentsPage />} />
+          <main className="flex-1 p-6 relative z-10 bg-[#161616] text-white">
+            <Routes>
+              <Route index element={<DashboardOverview />} />
+              <Route path="monitors" element={<MonitorsPage />} />
+              {/* <Route path="incidents" element={<IncidentsPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} /> */}
-          </Routes>
-        </main>
+            </Routes>
+          </main>
+        </div>
       </div>
     </div>
   );

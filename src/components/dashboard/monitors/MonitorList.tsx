@@ -14,11 +14,11 @@ const MonitorsList = () => {
   const [, setIsAddModalOpen] = useState(false);
 
   const { data: monitors, isLoading, error } = useMonitors();
-
+  console.log("Monitors data:", monitors);
   const filtered = monitors?.filter(
     (m) =>
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.url.toLowerCase().includes(searchTerm.toLowerCase())
+      m.websiteName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.url?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) return <LoadingSpinner />;

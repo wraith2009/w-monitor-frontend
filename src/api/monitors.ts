@@ -1,14 +1,25 @@
 import { api } from './auth';
+export type MonitorStatus = 'up' | 'down' | 'degraded';
 
 export interface Monitor {
-    id: string;
-    name: string;
+    id: number;
+    slug: string;
+    websiteName: string;
     url: string;
-    status: 'up' | 'down' | 'degraded';
-    uptime: number;
-    responseTime: number;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    expectedStatus: number;
+    interval: number;
+    timeout: number;
+    isPaused: boolean;
+    regions: string[];
+    lastCheckedAt: string;
+    userId: number;
+    isDeleted: boolean;
     createdAt: string;
     updatedAt: string;
+    status?: MonitorStatus;       // optional, for UI state
+    uptime?: number;              // e.g. 99.95
+    responseTime?: number;        // e.g. 210ms
 }
 
 export interface CreateMonitorData {
@@ -29,7 +40,7 @@ export interface UpdateMonitorData extends Partial<CreateMonitorData> {
 export const monitorsApi = {
     getMonitors: async (): Promise<Monitor[]> => {
         const response = await api.get('/get-monitor');
-        return response.data;
+        return response.data.data;
     },
 
 

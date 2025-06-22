@@ -1,28 +1,19 @@
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:3001/api';
-
+import { injectToken } from '@/utils/InjectToken';
+import { toast } from 'sonner';
 export const api = axios.create({
     baseURL: API_BASE_URL,
 });
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('auth-storage');
-    if (token) {
-        const authData = JSON.parse(token);
-        if (authData.state?.token) {
-            config.headers.Authorization = `Bearer ${authData.state.token}`;
-        }
-    }
-    return config;
-});
+api.interceptors.request.use(injectToken);
 
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('auth-storage');
-            window.location.href = '/signin';
+            toast.error('Unauthorized access. Please log in again.');
         }
         return Promise.reject(error);
     }
@@ -51,7 +42,7 @@ export interface AuthResponse {
 export const authApi = {
     login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
         const response = await api.post('/signin', credentials);
-        return response.data;
+        return response.data.data;
     },
 
     register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
