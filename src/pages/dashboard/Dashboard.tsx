@@ -40,6 +40,9 @@ import {
 } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { WorldMap } from "@/components/ui/world-map";
+import { MonitorsScreen } from "./monitor-screen";
+import { useState } from "react";
+
 // Mock data for the dashboard
 const uptimeData = [
   { time: "00:00", uptime: 99.9 },
@@ -94,13 +97,7 @@ const monitors = [
   },
 ];
 
-const menuItems = [
-  { title: "Dashboard", icon: BarChart3, isActive: true },
-  { title: "Monitors", icon: Activity },
-  { title: "Incidents", icon: AlertCircle },
-  { title: "Analytics", icon: TrendingUp },
-  { title: "Settings", icon: Settings },
-];
+// Regional data for the world map
 const regions = [
   {
     lat: 40.7128,
@@ -138,9 +135,9 @@ const regions = [
     lat: -23.5505,
     lng: -46.6333,
     label: "South America",
-    uptime: 97.8,
+    uptime: 99.4,
     responseTime: 180,
-    status: "degraded" as const,
+    status: "up" as const,
   },
   {
     lat: -33.8688,
@@ -168,7 +165,21 @@ const connections = [
   },
 ];
 
-function Sidebar() {
+const menuItems = [
+  { title: "Dashboard", icon: BarChart3, key: "dashboard" },
+  { title: "Monitors", icon: Activity, key: "monitors" },
+  { title: "Incidents", icon: AlertCircle, key: "incidents" },
+  { title: "Analytics", icon: TrendingUp, key: "analytics" },
+  { title: "Settings", icon: Settings, key: "settings" },
+];
+
+function Sidebar({
+  activeScreen,
+  onScreenChange,
+}: {
+  activeScreen: string;
+  onScreenChange: (screen: string) => void;
+}) {
   return (
     <div className="w-64 bg-[#161616] border-r border-gray-800/30 flex flex-col">
       {/* User Profile Section */}
@@ -201,9 +212,10 @@ function Sidebar() {
         <nav className="space-y-1">
           {menuItems.map((item) => (
             <button
-              key={item.title}
+              key={item.key}
+              onClick={() => onScreenChange(item.key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${
-                item.isActive
+                activeScreen === item.key
                   ? "bg-gray-800/60 text-white"
                   : "text-gray-400 hover:bg-gray-800/40 hover:text-white"
               }`}
@@ -226,19 +238,280 @@ function Sidebar() {
   );
 }
 
+function DashboardContent() {
+  return (
+    <div className="space-y-6">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-[#1f1f1f] border-gray-800/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Overall Uptime</span>
+              <Activity className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="text-2xl font-semibold text-white">99.7%</div>
+            <div className="text-xs text-gray-500 mt-1">Last 30 days</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1f1f1f] border-gray-800/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Avg Response</span>
+              <Clock className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="text-2xl font-semibold text-white">128ms</div>
+            <div className="text-xs text-gray-500 mt-1">Global average</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1f1f1f] border-gray-800/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Active Monitors</span>
+              <Shield className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="text-2xl font-semibold text-white">24</div>
+            <div className="text-xs text-gray-500 mt-1">6 regions</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1f1f1f] border-gray-800/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Incidents</span>
+              <AlertTriangle className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="text-2xl font-semibold text-white">2</div>
+            <div className="text-xs text-gray-500 mt-1">Degraded regions</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* World Map and Chart Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* World Map */}
+        <Card className="bg-[#1f1f1f] border-gray-800/50">
+          <CardHeader className="border-b border-gray-800/30 pb-4">
+            <div className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-gray-400" />
+              <CardTitle className="text-lg font-semibold text-white">
+                Global Status
+              </CardTitle>
+            </div>
+            <p className="text-gray-500 text-sm">
+              Hover over regions to see detailed metrics
+            </p>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <WorldMap
+              regions={regions}
+              dots={connections}
+              lineColor="#6b7280"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Uptime Chart */}
+        <Card className="bg-[#1f1f1f] border-gray-800/50">
+          <CardHeader className="border-b border-gray-800/30 pb-4">
+            <CardTitle className="text-lg font-semibold text-white">
+              24h Uptime Trend
+            </CardTitle>
+            <p className="text-gray-500 text-sm">
+              System performance over time
+            </p>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <ChartContainer
+              config={{
+                uptime: {
+                  label: "Uptime %",
+                  color: "#9CA3AF",
+                },
+              }}
+              className="h-[280px]"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={uptimeData}>
+                  <XAxis
+                    dataKey="time"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#6B7280", fontSize: 12 }}
+                  />
+                  <YAxis
+                    domain={[95, 100]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#6B7280", fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f1f1f",
+                      border: "1px solid #374151",
+                      borderRadius: "8px",
+                      color: "#FFFFFF",
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="uptime"
+                    stroke="#9CA3AF"
+                    strokeWidth={2}
+                    dot={{ fill: "#9CA3AF", strokeWidth: 2, r: 3 }}
+                    activeDot={{ r: 5, fill: "#9CA3AF" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Monitors Table */}
+      <Card className="bg-[#1f1f1f] border-gray-800/50">
+        <CardHeader className="border-b border-gray-800/30 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold text-white">
+                Monitor Status
+              </CardTitle>
+              <p className="text-gray-500 text-sm mt-1">
+                Current status of all monitored services
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-700 text-gray-400 hover:bg-gray-800/40 hover:text-white"
+            >
+              Add Monitor
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-gray-800/30 hover:bg-transparent">
+                <TableHead className="text-gray-400 font-medium">
+                  Service
+                </TableHead>
+                <TableHead className="text-gray-400 font-medium">URL</TableHead>
+                <TableHead className="text-gray-400 font-medium">
+                  Status
+                </TableHead>
+                <TableHead className="text-gray-400 font-medium">
+                  Uptime
+                </TableHead>
+                <TableHead className="text-gray-400 font-medium">
+                  Response Time
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {monitors.map((monitor) => (
+                <TableRow
+                  key={monitor.id}
+                  className="border-gray-800/20 hover:bg-gray-800/20 transition-colors duration-200"
+                >
+                  <TableCell className="text-white font-medium">
+                    {monitor.name}
+                  </TableCell>
+                  <TableCell className="text-gray-400 font-mono text-sm">
+                    {monitor.url}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        monitor.status === "up"
+                          ? "bg-gray-700/50 text-gray-300"
+                          : "bg-gray-600/50 text-gray-200"
+                      }
+                    >
+                      {monitor.status === "up" ? (
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                      ) : (
+                        <XCircle className="w-3 h-3 mr-1" />
+                      )}
+                      {monitor.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-gray-300">
+                    {monitor.uptime}%
+                  </TableCell>
+                  <TableCell className="text-gray-300 font-mono text-sm">
+                    {monitor.responseTime > 0
+                      ? `${monitor.responseTime}ms`
+                      : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function Dashboard() {
+  const [activeScreen, setActiveScreen] = useState("dashboard");
+
+  const getBreadcrumbs = () => {
+    switch (activeScreen) {
+      case "monitors":
+        return ["Dashboard", "Monitors"];
+      case "incidents":
+        return ["Dashboard", "Incidents"];
+      case "analytics":
+        return ["Dashboard", "Analytics"];
+      case "settings":
+        return ["Dashboard", "Settings"];
+      default:
+        return ["Dashboard", "Overview"];
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeScreen) {
+      case "monitors":
+        return <MonitorsScreen />;
+      case "incidents":
+        return <div className="text-white">Incidents Screen - Coming Soon</div>;
+      case "analytics":
+        return <div className="text-white">Analytics Screen - Coming Soon</div>;
+      case "settings":
+        return <div className="text-white">Settings Screen - Coming Soon</div>;
+      default:
+        return <DashboardContent />;
+    }
+  };
+
+  const breadcrumbs = getBreadcrumbs();
+
   return (
     <div className="min-h-screen bg-[#161616] flex">
-      <Sidebar />
+      <Sidebar activeScreen={activeScreen} onScreenChange={setActiveScreen} />
 
       <div className="flex-1 flex flex-col">
         {/* Top Navigation - Sleek and Connected */}
         <header className="bg-[#161616] border-b border-gray-800/30 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <span>Dashboard</span>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-white">Overview</span>
+              {breadcrumbs.map((crumb, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  {index > 0 && <ChevronRight className="h-4 w-4" />}
+                  <span
+                    className={
+                      index === breadcrumbs.length - 1 ? "text-white" : ""
+                    }
+                  >
+                    {crumb}
+                  </span>
+                </div>
+              ))}
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -260,221 +533,7 @@ export function Dashboard() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 space-y-6">
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-[#1f1f1f] border-gray-800/50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-400">Overall Uptime</span>
-                  <Activity className="h-4 w-4 text-gray-500" />
-                </div>
-                <div className="text-2xl font-semibold text-white">99.7%</div>
-                <div className="text-xs text-gray-500 mt-1">Last 30 days</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1f1f1f] border-gray-800/50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-400">Avg Response</span>
-                  <Clock className="h-4 w-4 text-gray-500" />
-                </div>
-                <div className="text-2xl font-semibold text-white">128ms</div>
-                <div className="text-xs text-gray-500 mt-1">Global average</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1f1f1f] border-gray-800/50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-400">Active Monitors</span>
-                  <Shield className="h-4 w-4 text-gray-500" />
-                </div>
-                <div className="text-2xl font-semibold text-white">24</div>
-                <div className="text-xs text-gray-500 mt-1">5 regions</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1f1f1f] border-gray-800/50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-400">Incidents</span>
-                  <AlertTriangle className="h-4 w-4 text-gray-500" />
-                </div>
-                <div className="text-2xl font-semibold text-white">1</div>
-                <div className="text-xs text-gray-500 mt-1">Active now</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* World Map and Chart Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* World Map */}
-            <Card className="bg-[#1f1f1f] border-gray-800/50">
-              <CardHeader className="border-b border-gray-800/30 pb-4">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-5 w-5 text-gray-400" />
-                  <CardTitle className="text-lg font-semibold text-white">
-                    Global Status
-                  </CardTitle>
-                </div>
-                <p className="text-gray-500 text-sm">
-                  Hover over regions to see detailed metrics
-                </p>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <WorldMap
-                  regions={regions}
-                  dots={connections}
-                  lineColor="#6b7280"
-                />
-              </CardContent>
-            </Card>
-
-            {/* Uptime Chart */}
-            <Card className="bg-[#1f1f1f] border-gray-800/50">
-              <CardHeader className="border-b border-gray-800/30 pb-4">
-                <CardTitle className="text-lg font-semibold text-white">
-                  24h Uptime Trend
-                </CardTitle>
-                <p className="text-gray-500 text-sm">
-                  System performance over time
-                </p>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <ChartContainer
-                  config={{
-                    uptime: {
-                      label: "Uptime %",
-                      color: "#9CA3AF",
-                    },
-                  }}
-                  className="h-[280px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={uptimeData}>
-                      <XAxis
-                        dataKey="time"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#6B7280", fontSize: 12 }}
-                      />
-                      <YAxis
-                        domain={[95, 100]}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#6B7280", fontSize: 12 }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1f1f1f",
-                          border: "1px solid #374151",
-                          borderRadius: "8px",
-                          color: "#FFFFFF",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="uptime"
-                        stroke="#9CA3AF"
-                        strokeWidth={2}
-                        dot={{ fill: "#9CA3AF", strokeWidth: 2, r: 3 }}
-                        activeDot={{ r: 5, fill: "#9CA3AF" }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Monitors Table */}
-          <Card className="bg-[#1f1f1f] border-gray-800/50">
-            <CardHeader className="border-b border-gray-800/30 pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold text-white">
-                    Monitor Status
-                  </CardTitle>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Current status of all monitored services
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-700 text-gray-400 hover:bg-gray-800/40 hover:text-white"
-                >
-                  Add Monitor
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-gray-800/30 hover:bg-transparent">
-                    <TableHead className="text-gray-400 font-medium">
-                      Service
-                    </TableHead>
-                    <TableHead className="text-gray-400 font-medium">
-                      URL
-                    </TableHead>
-                    <TableHead className="text-gray-400 font-medium">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-gray-400 font-medium">
-                      Uptime
-                    </TableHead>
-                    <TableHead className="text-gray-400 font-medium">
-                      Response Time
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monitors.map((monitor) => (
-                    <TableRow
-                      key={monitor.id}
-                      className="border-gray-800/20 hover:bg-gray-800/20 transition-colors duration-200"
-                    >
-                      <TableCell className="text-white font-medium">
-                        {monitor.name}
-                      </TableCell>
-                      <TableCell className="text-gray-400 font-mono text-sm">
-                        {monitor.url}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            monitor.status === "up"
-                              ? "bg-gray-700/50 text-gray-300"
-                              : "bg-gray-600/50 text-gray-200"
-                          }
-                        >
-                          {monitor.status === "up" ? (
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                          ) : (
-                            <XCircle className="w-3 h-3 mr-1" />
-                          )}
-                          {monitor.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-300">
-                        {monitor.uptime}%
-                      </TableCell>
-                      <TableCell className="text-gray-300 font-mono text-sm">
-                        {monitor.responseTime > 0
-                          ? `${monitor.responseTime}ms`
-                          : "—"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </main>
+        <main className="flex-1 p-6">{renderContent()}</main>
       </div>
     </div>
   );
