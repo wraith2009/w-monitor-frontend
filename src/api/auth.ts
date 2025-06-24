@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:3001/api';
 import { injectToken } from '@/utils/InjectToken';
+import { useAuthStore } from '@/stores/authStore';
+// Ensure you have the correct path to your auth store
 import { toast } from 'sonner';
 export const api = axios.create({
     baseURL: API_BASE_URL,
@@ -13,7 +15,11 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            toast.error('Unauthorized access. Please log in again.');
+            toast.error('Session expired. Please log in again.');
+
+            const authStore = useAuthStore.getState(); // Access outside React
+            authStore.logout(); // Clear state
+            window.location.href = '/signin'; // Redirect
         }
         return Promise.reject(error);
     }

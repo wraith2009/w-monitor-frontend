@@ -8,7 +8,7 @@ interface AuthRedirectProps {
 
 const AuthRedirect = ({ children }: AuthRedirectProps) => {
   const { isAuthenticated } = useAuthStore();
-
+  console.log("AuthRedirect isAuthenticated:", isAuthenticated);
   if (isAuthenticated) {
     // If user is already authenticated, redirect to dashboard
     return <Navigate to="/dashboard" replace />;

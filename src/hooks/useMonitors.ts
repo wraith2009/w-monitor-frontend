@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { monitorsApi } from '../api/monitors';
+import type { CreateMonitorData } from '../api/monitors';
 import { toast } from 'sonner';
 
 export const useMonitors = () => {
@@ -14,7 +15,7 @@ export const useCreateMonitor = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: monitorsApi.createMonitor,
+        mutationFn: (data: CreateMonitorData) => monitorsApi.createMonitor(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['monitors'] });
             toast.success('Monitor created successfully');
