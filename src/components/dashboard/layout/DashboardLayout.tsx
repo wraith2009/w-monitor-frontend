@@ -78,7 +78,12 @@ const DashboardLayout = () => {
         }}
       />
       <div className="min-h-screen flex">
-        <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={toggleSidebar}
+          activeScreen={breadcrumbs[breadcrumbs.length - 1]}
+          onScreenChange={(screen) => console.log("Screen changed to:", screen)}
+        />
         <div className="flex-1 flex flex-col min-w-0">
           <Header
             breadcrumbs={breadcrumbs}
