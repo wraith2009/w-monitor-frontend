@@ -67,13 +67,13 @@ const formatUptime = (uptime: any) => {
 
 const OverviewCards = () => {
   const { data: metrics, isLoading, isError } = useDashboardMetrics();
-
+  console.log("Dashboard metrics:", metrics);
   const cards = [
     {
       title: "Overall Uptime",
       value: metrics?.overallUptime,
       displayValue: formatUptime(metrics?.overallUptime),
-      animatedValue: metrics?.overallUptime ? metrics.overallUptime * 100 : 0,
+      animatedValue: metrics?.overallUptime ? metrics.overallUptime : 0,
       suffix: "%",
       subtitle: "Last 30 days",
       icon: Activity,
@@ -94,12 +94,11 @@ const OverviewCards = () => {
     {
       title: "Active Monitors",
       value: Object.keys(metrics?.activeMonitorsByRegion || {}).length,
-      animatedValue: Object.keys(metrics?.activeMonitorsByRegion || {}).length,
+      animatedValue: Object.values(
+        metrics?.activeMonitorsByRegion || {}
+      ).reduce((a, b) => a + b, 0),
       suffix: "",
-      subtitle: `${Object.values(metrics?.activeMonitorsByRegion || {}).reduce(
-        (a, b) => a + b,
-        0
-      )} total monitors`,
+      subtitle: ``,
       icon: Shield,
       color: "text-violet-400",
       glowColor: "shadow-violet-500/10",

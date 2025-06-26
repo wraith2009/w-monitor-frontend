@@ -1,6 +1,7 @@
 import { api } from './auth';
 export type MonitorStatus = 'up' | 'down' | 'degraded';
 
+
 export interface Monitor {
     id: number;
     slug: string;
@@ -22,19 +23,24 @@ export interface Monitor {
     responseTime?: number;        // e.g. 210ms
 }
 
-export interface CreateMonitorData {
-    websiteName: string;
-    url: string;
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    expectedStatus: number;
-    interval: number;
-    timeout: number;
-    isPaused?: boolean;
-    regions?: string[];
-}
+// Omit fields that are server-generated or not needed during creation
+export type CreateMonitorData = Omit<
+    Monitor,
+    | 'id'
+    | 'slug'
+    | 'userId'
+    | 'lastCheckedAt'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'isDeleted'
+    | 'status'
+    | 'uptime'
+    | 'responseTime'
+>;
 
+// For updates, everything is optional except `id`
 export interface UpdateMonitorData extends Partial<CreateMonitorData> {
-    id: string;
+    id: number;
 }
 
 export const monitorsApi = {
@@ -52,11 +58,12 @@ export const monitorsApi = {
     updateMonitor: async (data: UpdateMonitorData): Promise<Monitor> => {
         const { id, ...updateData } = data;
         const response = await api.put(`/update-monitor/${id}`, updateData);
-        return response.data;
+        return response.data.data;
     },
 
     deleteMonitor: async (id: string): Promise<void> => {
-        await api.put(`/delete-monitor/${id}`, { isDeleted: true });
+        const response = await api.put(`/delete-monitor/${id}`, { isDeleted: true });
+        return response.data.data;
     },
 
 

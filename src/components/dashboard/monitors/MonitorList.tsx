@@ -31,7 +31,8 @@ const MonitorsList = () => {
       m.websiteName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.url?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || m.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const isActive = !m.isDeleted;
+    return matchesSearch && matchesStatus && isActive;
   });
 
   if (isLoading) return <LoadingSpinner />;

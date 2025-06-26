@@ -6,6 +6,7 @@ export interface dashboardMetrics {
     activeMonitorsByRegion: Record<string, number>;
     totalIncidents: number;
 }
+
 export interface UptimeChartData {
     hour: string;
     uptime: number;
@@ -14,11 +15,11 @@ export interface UptimeChartData {
 export const DashboardApi = {
     getDashboardMetrics: async (): Promise<dashboardMetrics> => {
         const response = await api.get('/dashboard/stats');
-        return response.data;
+        return response.data.data;
     },
 
     getUptimeTrend: async (): Promise<UptimeChartData[]> => {
         const response = await api.get('/dashboard/uptime-trend');
-        return response.data;
+        return response.data.data;
     }
 }

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { monitorsApi } from '../api/monitors';
-import type { CreateMonitorData } from '../api/monitors';
+import type { CreateMonitorData, UpdateMonitorData } from '../api/monitors';
 import { toast } from 'sonner';
 
 export const useMonitors = () => {
@@ -25,15 +25,13 @@ export const useCreateMonitor = () => {
         },
     });
 };
-
 export const useUpdateMonitor = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: monitorsApi.updateMonitor,
-        onSuccess: (data) => {
+        mutationFn: (data: UpdateMonitorData) => monitorsApi.updateMonitor(data),
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['monitors'] });
-            queryClient.invalidateQueries({ queryKey: ['monitor', data.id] });
             toast.success('Monitor updated successfully');
         },
         onError: (error: any) => {
@@ -46,7 +44,7 @@ export const useDeleteMonitor = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: monitorsApi.deleteMonitor,
+        mutationFn: (id: string) => monitorsApi.deleteMonitor(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['monitors'] });
             toast.success('Monitor deleted successfully');
