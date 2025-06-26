@@ -9,14 +9,18 @@ import {
   Line,
 } from "recharts";
 import { useState, useEffect } from "react";
-import { useUptimeTrend } from "@/hooks/useDashboard";
-
-const UptimeChart = () => {
+import type { UptimeChartData } from "@/api/dashboard";
+const UptimeChart = ({
+  uptimeData,
+  isLoading,
+}: {
+  uptimeData: UptimeChartData[];
+  isLoading: boolean;
+}) => {
   const [animatedData, setAnimatedData] = useState<
     { hour: string; uptime: number }[]
   >([]);
   const [, setIsVisible] = useState(false);
-  const { data: uptimeData = [], isLoading } = useUptimeTrend();
 
   useEffect(() => {
     if (!uptimeData.length || isLoading) return;

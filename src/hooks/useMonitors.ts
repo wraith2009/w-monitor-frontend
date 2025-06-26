@@ -55,4 +55,26 @@ export const useDeleteMonitor = () => {
     });
 };
 
+export const getMonitorStatsById = (id: string) => {
+    return useQuery({
+        queryKey: ['monitorStats', id],
+        queryFn: () => monitorsApi.getMonitorStatsById(id),
+        enabled: !!id,
+    });
+}
+export const getRegionStatsByMonitorId = (monitorId: number) => {
+    return useQuery({
+        queryKey: ['regionStats', monitorId],
+        queryFn: () => monitorsApi.getRegionStatsByMonitorId(monitorId),
+        enabled: !!monitorId,
+    });
+}
+export const getUptimeTrendByMonitorId = (monitorId: number) => {
+    return useQuery({
+        queryKey: ['uptimeTrend', monitorId],
+        queryFn: () => monitorsApi.getUptimeTrendByMonitorId(monitorId),
+        enabled: !!monitorId,
+    });
+}
+
 

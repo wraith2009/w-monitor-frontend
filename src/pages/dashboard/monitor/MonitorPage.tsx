@@ -1,12 +1,26 @@
 import OverviewCards from "@/components/dashboard/overview/OverviewCards";
 import WorldMapSection from "@/components/dashboard/overview/DashboardSection";
 import UptimeChart from "@/components/dashboard/overview/UptimeChart";
-import MonitorsTable from "@/components/dashboard/overview/MonitorsTable";
-import { useUptimeTrend } from "@/hooks/useDashboard";
-import { useDashboardMetrics } from "@/hooks/useDashboard";
-const DashboardOverview = () => {
-  const { data: uptimeData = [], isLoading } = useUptimeTrend();
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
+import {
+  getMonitorStatsById,
+  // getRegionStatsByMonitorId,
+  getUptimeTrendByMonitorId,
+} from "@/hooks/useMonitors";
+import { useParams } from "react-router-dom";
+const MonitorPage = () => {
+  let { id } = useParams<{ id: string }>();
+  if (!id) {
+    return (
+      <div className="text-red-500 text-center">Monitor ID is required</div>
+    );
+  }
+  const monitorId = parseInt(id, 10);
+  const { data: rawUptimeData, isLoading } =
+    getUptimeTrendByMonitorId(monitorId);
+  const uptimeData = Array.isArray(rawUptimeData?.trend)
+    ? rawUptimeData.trend
+    : [];
+  const { data: metrics, isLoading: metricsLoading } = getMonitorStatsById(id);
   return (
     <div className="space-y-6">
       {metricsLoading && (
@@ -29,10 +43,8 @@ const DashboardOverview = () => {
         <WorldMapSection />
         <UptimeChart uptimeData={uptimeData} isLoading={isLoading} />
       </div>
-
-      <MonitorsTable />
     </div>
   );
 };
 
-export default DashboardOverview;
+export default MonitorPage;

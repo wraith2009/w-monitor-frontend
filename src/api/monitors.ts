@@ -37,6 +37,30 @@ export type CreateMonitorData = Omit<
     | 'uptime'
     | 'responseTime'
 >;
+export interface MonitorMetrics {
+    monitorId: number;
+    monitorName: string;
+    monitorUrl: string;
+    overallUptime: number; // percentage e.g., 100.0
+    averageResponseTime: number; // in ms, can be float
+    activeMonitorsByRegion: Record<string, number>; // region → count
+    totalIncidents: number;
+    totalChecks: number;
+    successfulChecks: number;
+}
+export interface MonitorRegionStat {
+    region: string;             // e.g., "us-east-1"
+    uptime: number;             // percentage, e.g., 100
+    avgResponse: number;        // in milliseconds
+    status: "Up" | "Down" | "Degraded" | string; // allow flexibility
+}
+
+export interface MonitorRegionalMetrics {
+    monitorId: number;
+    monitorName: string;
+    monitorUrl: string;
+    regionStats: MonitorRegionStat[];
+}
 
 // For updates, everything is optional except `id`
 export interface UpdateMonitorData extends Partial<CreateMonitorData> {
@@ -66,5 +90,21 @@ export const monitorsApi = {
         return response.data.data;
     },
 
-
-};
+    getMonitorStatsById: async (id: string): Promise<MonitorMetrics> => {
+        const response = await api.get(`/websites/stats/${id}`);
+        return response.data.data;
+    },
+    getRegionStatsByMonitorId: async (monitorId: number): Promise<MonitorRegionalMetrics> => {
+        const response = await api.get(`/websites/region-stats/${monitorId}`);
+        return response.data.data;
+    },
+    getUptimeTrendByMonitorId: async (monitorId: number): Promise<{
+        monitorId: number;
+        monitorName: string;
+        monitorUrl: string;
+        trend: { hour: string; uptime: number }[];
+    }> => {
+        const response = await api.get(`/websites/uptime-trend/${monitorId}`);
+        return response.data.data;
+    }
+}

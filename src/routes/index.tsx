@@ -1,6 +1,5 @@
 // src/routes/index.tsx
 import { Routes, Route } from "react-router-dom";
-import Landing from "../pages/Landing";
 import { Dashboard } from "../pages/dashboard/Dashboard";
 import SignIn from "../pages/auth/SignIn";
 import SignUp from "../pages/auth/SignUp";
@@ -11,7 +10,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Landing />} />
+      {/* <Route path="/" element={<Landing />} /> */}
 
       {/* Auth Routes - Redirect if already authenticated */}
       <Route
@@ -41,7 +40,7 @@ const AppRoutes = () => {
         }
       />
 
-      <Route path="*" element={<Landing />} />
+      <Route path="*" element={<SignIn />} />
     </Routes>
   );
 };

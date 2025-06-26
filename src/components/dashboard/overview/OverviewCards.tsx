@@ -2,7 +2,6 @@ import { Activity, Clock, Shield, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useDashboardMetrics } from "@/hooks/useDashboard";
 
 // Smooth animated counter component
 const AnimatedCounter = ({
@@ -64,10 +63,16 @@ const formatUptime = (uptime: any) => {
   if (uptime === null || uptime === undefined) return "0%";
   return `${(uptime * 100).toFixed(1)}%`;
 };
+interface overviewCardProps {
+  metrics: {
+    overallUptime: number | null;
+    averageResponseTime: number | null;
+    activeMonitorsByRegion: Record<string, number>;
+    totalIncidents: number | null;
+  };
+}
 
-const OverviewCards = () => {
-  const { data: metrics, isLoading, isError } = useDashboardMetrics();
-  console.log("Dashboard metrics:", metrics);
+const OverviewCards = ({ metrics }: overviewCardProps) => {
   const cards = [
     {
       title: "Overall Uptime",
@@ -119,14 +124,6 @@ const OverviewCards = () => {
     },
   ];
 
-  if (isError) {
-    return (
-      <div className="text-red-500 text-center">
-        Failed to load dashboard metrics.
-      </div>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
@@ -173,64 +170,21 @@ const OverviewCards = () => {
               </div>
 
               <div className="text-3xl font-bold text-white mb-3 tracking-tight">
-                {isLoading ? (
-                  <div className="flex items-center space-x-1">
-                    <motion.div
-                      className="w-2 h-2 bg-gray-600 rounded-full"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.8, 0.3],
-                      }}
-                      transition={{
-                        duration: 1.4,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    />
-                    <motion.div
-                      className="w-2 h-2 bg-gray-600 rounded-full"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.8, 0.3],
-                      }}
-                      transition={{
-                        duration: 1.4,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.2,
-                      }}
-                    />
-                    <motion.div
-                      className="w-2 h-2 bg-gray-600 rounded-full"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.8, 0.3],
-                      }}
-                      transition={{
-                        duration: 1.4,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.4,
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: index * 0.08 + 0.4,
-                      duration: 0.5,
-                      ease: "easeOut",
-                    }}
-                  >
-                    <AnimatedCounter
-                      value={card.animatedValue}
-                      suffix={card.suffix}
-                      duration={1200 + index * 200}
-                    />
-                  </motion.div>
-                )}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: index * 0.08 + 0.4,
+                    duration: 0.5,
+                    ease: "easeOut",
+                  }}
+                >
+                  <AnimatedCounter
+                    value={card.animatedValue}
+                    suffix={card.suffix}
+                    duration={1200 + index * 200}
+                  />
+                </motion.div>
               </div>
 
               <motion.div

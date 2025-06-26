@@ -1,5 +1,5 @@
 import MonitorsList from "@/components/dashboard/monitors/MonitorList";
-const MonitorsPage = () => {
+const MonitorsListPage = () => {
   return (
     <div className="space-y-6">
       <MonitorsList />
@@ -7,4 +7,4 @@ const MonitorsPage = () => {
   );
 };
 
-export default MonitorsPage;
+export default MonitorsListPage;
