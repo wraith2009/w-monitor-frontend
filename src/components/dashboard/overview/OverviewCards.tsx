@@ -128,14 +128,9 @@ const OverviewCards = ({ metrics }: overviewCardProps) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
         <motion.div
-          key={index}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{
-            delay: index * 0.08,
-            duration: 0.6,
-            ease: [0.25, 0.46, 0.45, 0.94],
-          }}
+          transition={{ delay: 0.1 }}
         >
           <Card
             className={`
@@ -200,7 +195,6 @@ const OverviewCards = ({ metrics }: overviewCardProps) => {
                 {card.subtitle}
               </motion.div>
 
-              {/* Subtle hover effect overlay */}
               <motion.div
                 className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                 style={{

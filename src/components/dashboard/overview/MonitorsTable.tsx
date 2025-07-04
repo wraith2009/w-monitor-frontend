@@ -17,7 +17,9 @@ const MonitorsTable = () => {
   const { data: monitors, isLoading, error } = useMonitors();
 
   if (isLoading) return <LoadingSpinner />;
-
+  const filteredMonitors = monitors?.filter(
+    (monitor) => monitor.isDeleted !== true
+  );
   if (error) {
     return (
       <Card className="bg-[#1f1f1f] border-gray-800/50">
@@ -69,7 +71,7 @@ const MonitorsTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {monitors?.map((monitor) => (
+            {filteredMonitors?.map((monitor) => (
               <TableRow
                 key={monitor.id}
                 className="border-gray-800/20 hover:bg-gray-800/20 transition-colors duration-200"

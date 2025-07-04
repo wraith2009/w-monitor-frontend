@@ -5,6 +5,7 @@ import Header from "./Header";
 import DashboardOverview from "@/pages/dashboard/DashboardOverview";
 import MonitorsListPage from "@/pages/dashboard/monitor/MonitorsListPage";
 import MonitorPage from "@/pages/dashboard/monitor/MonitorPage";
+import IncidentPage from "@/pages/dashboard/incidents/incidentPage";
 // import IncidentsPage from "@/pages/dashboard/IncidentsPage";
 // import AnalyticsPage from "@/pages/dashboard/AnalyticsPage";
 // import SettingsPage from "@/pages/dashboard/SettingsPage";
@@ -95,6 +96,7 @@ const DashboardLayout = () => {
               <Route index element={<DashboardOverview />} />
               <Route path="monitors" element={<MonitorsListPage />} />
               <Route path="monitors/:id" element={<MonitorPage />} />
+              <Route path="incidents" element={<IncidentPage />} />
               {/* Uncomment these routes when ready */}
               {/* <Route path="incidents" element={<IncidentsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
