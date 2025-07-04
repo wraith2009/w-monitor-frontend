@@ -6,6 +6,7 @@ import DashboardOverview from "@/pages/dashboard/DashboardOverview";
 import MonitorsListPage from "@/pages/dashboard/monitor/MonitorsListPage";
 import MonitorPage from "@/pages/dashboard/monitor/MonitorPage";
 import IncidentPage from "@/pages/dashboard/incidents/incidentPage";
+import LogPage from "@/pages/dashboard/logs/logPage";
 // import IncidentsPage from "@/pages/dashboard/IncidentsPage";
 // import AnalyticsPage from "@/pages/dashboard/AnalyticsPage";
 // import SettingsPage from "@/pages/dashboard/SettingsPage";
@@ -19,6 +20,7 @@ const breadcrumbMap = [
   { path: "/dashboard/incidents", crumbs: ["Dashboard", "Incidents"] },
   { path: "/dashboard/analytics", crumbs: ["Dashboard", "Analytics"] },
   { path: "/dashboard/settings", crumbs: ["Dashboard", "Settings"] },
+  { path: "/dashboard/logs", crumbs: ["Dashboard", "Logs  "] },
   { path: "/", crumbs: ["Dashboard", "Overview"] },
 ];
 
@@ -97,6 +99,7 @@ const DashboardLayout = () => {
               <Route path="monitors" element={<MonitorsListPage />} />
               <Route path="monitors/:id" element={<MonitorPage />} />
               <Route path="incidents" element={<IncidentPage />} />
+              <Route path="logs" element={<LogPage />} />
               {/* Uncomment these routes when ready */}
               {/* <Route path="incidents" element={<IncidentsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />

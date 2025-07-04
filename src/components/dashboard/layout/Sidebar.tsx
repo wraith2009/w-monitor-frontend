@@ -6,6 +6,7 @@ import {
   LogOut,
   BarChart3,
   AlertCircle,
+  Logs,
   X,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +20,7 @@ const menuItems = [
   { title: "Monitors", icon: Activity, path: "/dashboard/monitors" },
   { title: "Incidents", icon: AlertCircle, path: "/dashboard/incidents" },
   { title: "Analytics", icon: TrendingUp, path: "/dashboard/analytics" },
+  { title: "Logs", icon: Logs, path: "/dashboard/logs" },
   { title: "Settings", icon: Settings, path: "/dashboard/settings" },
 ];
 
