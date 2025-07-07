@@ -16,7 +16,7 @@ import { useState } from "react";
 import type { Monitor, MonitorStatus } from "@/api/monitors";
 import { useUpdateMonitor, useDeleteMonitor } from "@/hooks/useMonitors";
 import { Link } from "react-router-dom";
-
+import { toast } from "sonner";
 const statusConfig: Record<
   MonitorStatus,
   {
@@ -177,7 +177,26 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
                     )}
                   </Button>
                 </motion.div>
-
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const publicUrl = `${window.location.origin}/monitor/${monitor.slug}`;
+                      navigator.clipboard.writeText(publicUrl);
+                      toast.success("Public link copied to clipboard!");
+                    }}
+                    title="Copy Public Link"
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                  </Button>
+                </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
