@@ -99,7 +99,7 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
 
   return (
     <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-      <Link to={`/dashboard/monitors/${monitor.id}/${monitor.slug}`}>
+      <Link to={`/dashboard/monitors/${monitor.slug}`}>
         <Card
           className={`bg-[#1f1f1f] border-gray-800/50 hover:bg-gray-800/20 transition-colors duration-200 group ${
             isPaused ? "opacity-70" : ""
@@ -216,15 +216,17 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
                     isPaused ? "text-gray-500" : "text-white"
                   }`}
                 >
-                  {isPaused ? "--" : `${monitor.responseTime ?? "--"}ms`}
+                  {isPaused
+                    ? "--"
+                    : `${monitor.averageResponseTime?.toFixed(2) ?? "--"}ms`}
                 </span>
               </span>
               <span className="flex items-center">
-                <Globe className="w-3 h-3 mr-1" />
-                <span className="text-white">
+                <Globe className="w-3 h-3 mt-0.5" />
+                <p className="text-white">
                   {monitor.regions?.length ?? 0}
-                </span>{" "}
-                Regions
+                </p>{" "}
+                <p>{monitor.regions.length > 1 ? "Regions" : "Region"}</p>
               </span>
             </div>
 

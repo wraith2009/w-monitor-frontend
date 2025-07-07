@@ -7,28 +7,70 @@ export interface RegionData {
   label: string;
   uptime: number;
   responseTime: number;
-  status: "up" | "down" | "degraded";
+  status: "up" | "down" | "degraded" | "empty";
 }
 
-interface Connection {
-  start: { lat: number; lng: number };
-  end: { lat: number; lng: number };
+// Your API data format
+interface ApiRegionData {
+  region: string;
+  uptime: number;
+  avgResponse: number;
+  status: string;
 }
 
 interface WorldMapProps {
-  regions: RegionData[];
-  connections: Connection[];
+  regions?: RegionData[];
+  apiData?: ApiRegionData[];
   lineColor?: string;
 }
 
 export default function WorldMap({
   regions,
-  connections,
+  apiData = [],
   lineColor = "#0ea5e9",
 }: WorldMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<RegionData | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  console.log("api :", apiData);
+  // Define the specific regions you want to show
+  const predefinedRegions = useMemo(() => {
+    const baseRegions = [
+      { region: "mumbai", lat: 19.076, lng: 72.8777, label: "Mumbai" },
+      { region: "us-east-1", lat: 40.7128, lng: -74.006, label: "US East" },
+      { region: "eu-west-1", lat: 51.5074, lng: -0.1278, label: "EU West" },
+    ];
+
+    return baseRegions.map((baseRegion) => {
+      // Find matching API data
+      const apiMatch = apiData.find(
+        (api) =>
+          api.region === baseRegion.region ||
+          (baseRegion.region === "mumbai" && api.region.includes("mumbai"))
+      );
+
+      if (apiMatch) {
+        return {
+          lat: baseRegion.lat,
+          lng: baseRegion.lng,
+          label: baseRegion.label,
+          uptime: apiMatch.uptime,
+          responseTime: apiMatch.avgResponse,
+          status: apiMatch.status.toLowerCase() as "up" | "down" | "degraded",
+        };
+      }
+
+      // Return empty dot if no API data
+      return {
+        lat: baseRegion.lat,
+        lng: baseRegion.lng,
+        label: baseRegion.label,
+        uptime: 0,
+        responseTime: 0,
+        status: "empty" as const,
+      };
+    });
+  }, [apiData]);
 
   const svgMap = useMemo(() => {
     const map = new DottedMap({ height: 100, grid: "diagonal" });
@@ -57,7 +99,32 @@ export default function WorldMap({
     []
   );
 
+  // Define connections between base regions
+  const connections = useMemo(() => {
+    const baseRegions = [
+      { region: "ap-south-1", lat: 19.076, lng: 72.8777, label: "Mumbai" },
+      { region: "us-east-1", lat: 38.8051, lng: -77.047, label: "US East" },
+      { region: "eu-west-1", lat: 51.5074, lng: -0.1278, label: "EU West" },
+    ];
+
+    return [
+      {
+        start: { lat: baseRegions[0].lat, lng: baseRegions[0].lng }, // Mumbai
+        end: { lat: baseRegions[1].lat, lng: baseRegions[1].lng }, // US East
+      },
+      {
+        start: { lat: baseRegions[0].lat, lng: baseRegions[0].lng }, // Mumbai
+        end: { lat: baseRegions[2].lat, lng: baseRegions[2].lng }, // EU West
+      },
+      {
+        start: { lat: baseRegions[1].lat, lng: baseRegions[1].lng }, // US East
+        end: { lat: baseRegions[2].lat, lng: baseRegions[2].lng }, // EU West
+      },
+    ];
+  }, []);
+
   const statusColor = useCallback((status: string, uptime: number) => {
+    if (status === "empty") return "#6b7280"; // Gray for empty dots
     if (status === "down") return "#ef4444";
     if (status === "degraded" || uptime < 99.5) return "#f59e0b";
     return "#10b981";
@@ -99,6 +166,8 @@ export default function WorldMap({
     setHovered(null);
   }, []);
 
+  const displayRegions = regions || predefinedRegions;
+
   return (
     <div
       ref={containerRef}
@@ -132,7 +201,7 @@ export default function WorldMap({
           </filter>
         </defs>
 
-        {/* Animated curves */}
+        {/* Animated connection lines */}
         {connections.map((c, i) => {
           const a = project(c.start.lat, c.start.lng);
           const b = project(c.end.lat, c.end.lng);
@@ -158,15 +227,16 @@ export default function WorldMap({
         })}
 
         {/* Regions */}
-        {regions.map((r, i) => {
+        {displayRegions.map((r, i) => {
           const pt = project(r.lat, r.lng);
           const color = statusColor(r.status, r.uptime);
           const isHover = hovered?.label === r.label;
+          const isEmpty = r.status === "empty";
 
           return (
             <g key={i}>
-              {/* Hover effect circle */}
-              {isHover && (
+              {/* Hover effect circle - only for non-empty dots */}
+              {isHover && !isEmpty && (
                 <circle
                   cx={pt.x}
                   cy={pt.y}
@@ -189,16 +259,18 @@ export default function WorldMap({
                 cx={pt.x}
                 cy={pt.y}
                 r={isHover ? 6 : 4}
-                fill={color}
-                filter="url(#glow)"
+                fill={isEmpty ? "none" : color}
+                stroke={isEmpty ? color : "none"}
+                strokeWidth={isEmpty ? 2 : 0}
+                filter={isEmpty ? "none" : "url(#glow)"}
                 style={{ pointerEvents: "auto", cursor: "pointer" }}
                 onMouseEnter={(e) => handleRegionMouseEnter(r, e)}
                 onMouseMove={updateMouse}
                 onMouseLeave={handleRegionMouseLeave}
               />
 
-              {/* Status animations */}
-              {r.status === "up" && (
+              {/* Status animations - only for active regions */}
+              {!isEmpty && r.status === "up" && (
                 <circle
                   cx={pt.x}
                   cy={pt.y}
@@ -222,7 +294,7 @@ export default function WorldMap({
                 </circle>
               )}
 
-              {r.status === "degraded" && (
+              {!isEmpty && r.status === "degraded" && (
                 <circle
                   cx={pt.x}
                   cy={pt.y}
@@ -286,28 +358,34 @@ export default function WorldMap({
             {hovered.label}
           </div>
           <div className="space-y-1 text-gray-300">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Uptime:</span>
-              <span className="font-medium">{hovered.uptime}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Response:</span>
-              <span className="font-medium">{hovered.responseTime}ms</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Status:</span>
-              <span
-                className={`font-medium capitalize ${
-                  hovered.status === "up"
-                    ? "text-green-400"
-                    : hovered.status === "degraded"
-                    ? "text-yellow-400"
-                    : "text-red-400"
-                }`}
-              >
-                {hovered.status}
-              </span>
-            </div>
+            {hovered.status === "empty" ? (
+              <div className="text-center text-gray-400">No data available</div>
+            ) : (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Uptime:</span>
+                  <span className="font-medium">{hovered.uptime}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Response:</span>
+                  <span className="font-medium">{hovered.responseTime}ms</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Status:</span>
+                  <span
+                    className={`font-medium capitalize ${
+                      hovered.status === "up"
+                        ? "text-green-400"
+                        : hovered.status === "degraded"
+                        ? "text-yellow-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {hovered.status}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

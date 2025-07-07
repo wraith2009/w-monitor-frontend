@@ -6,12 +6,14 @@ import SignUp from "../pages/auth/SignUp";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import AuthRedirect from "../components/auth/AuthRedirect";
 import LandingPage from "@/pages/landing/landingPage";
+import MonitorPage from "@/pages/dashboard/monitor/MonitorPage";
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
       {/* <Route path="/" element={<Landing />} /> */}
       <Route path="/landing" element={<LandingPage />} />
+      <Route path="/monitor/:slug" element={<MonitorPage />} />
 
       {/* Auth Routes - No redirect */}
       {/* Auth Routes - Redirect if already authenticated */}

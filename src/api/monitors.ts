@@ -20,7 +20,7 @@ export interface Monitor {
     updatedAt: string;
     status?: MonitorStatus;       // optional, for UI state
     uptimePercentage?: number;              // e.g. 99.95
-    responseTime?: number;        // e.g. 210ms
+    averageResponseTime?: number;        // e.g. 210ms
 }
 
 // Omit fields that are server-generated or not needed during creation
@@ -56,9 +56,9 @@ export interface MonitorRegionStat {
 }
 
 export interface MonitorRegionalMetrics {
-    monitorId: number;
-    monitorName: string;
-    monitorUrl: string;
+    region: string;
+    uptime: number;
+    avgResponse: number;
     regionStats: MonitorRegionStat[];
 }
 
@@ -94,17 +94,17 @@ export const monitorsApi = {
         const response = await api.get(`/websites/stats/${slug}`);
         return response.data.data;
     },
-    getRegionStatsByMonitorId: async (monitorId: number): Promise<MonitorRegionalMetrics> => {
-        const response = await api.get(`/websites/region-stats/${monitorId}`);
+    getRegionStatsByMonitorSlug: async (slug: string): Promise<MonitorRegionalMetrics> => {
+        const response = await api.get(`/websites/region-stats/${slug}`);
         return response.data.data;
     },
-    getUptimeTrendByMonitorId: async (monitorId: number): Promise<{
+    getUptimeTrendBySlug: async (slug: string): Promise<{
         monitorId: number;
         monitorName: string;
         monitorUrl: string;
         trend: { hour: string; uptime: number }[];
     }> => {
-        const response = await api.get(`/websites/uptime-trend/${monitorId}`);
+        const response = await api.get(`/websites/uptime-trend/${slug}`);
         return response.data.data;
     }
 }

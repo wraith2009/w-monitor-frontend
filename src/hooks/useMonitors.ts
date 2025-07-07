@@ -62,18 +62,18 @@ export const getMonitorStatsBySlug = (slug: string) => {
         enabled: !!slug,
     });
 }
-export const getRegionStatsByMonitorId = (monitorId: number) => {
+export const getRegionStatsByMonitorSlug = (slug: string) => {
     return useQuery({
-        queryKey: ['regionStats', monitorId],
-        queryFn: () => monitorsApi.getRegionStatsByMonitorId(monitorId),
-        enabled: !!monitorId,
+        queryKey: ['regionStats', slug],
+        queryFn: () => monitorsApi.getRegionStatsByMonitorSlug(slug),
+        enabled: !!slug,
     });
 }
-export const getUptimeTrendByMonitorId = (monitorId: number) => {
+export const getUptimeTrendByMonitorSlug = (slug: string) => {
     return useQuery({
-        queryKey: ['uptimeTrend', monitorId],
-        queryFn: () => monitorsApi.getUptimeTrendByMonitorId(monitorId),
-        enabled: !!monitorId,
+        queryKey: ['uptimeTrend', slug],
+        queryFn: () => monitorsApi.getUptimeTrendBySlug(slug),
+        enabled: !!slug,
     });
 }
 
