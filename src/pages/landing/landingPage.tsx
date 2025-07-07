@@ -5,7 +5,7 @@ export default function SpotlightLanding() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const [windowSize, setWindowSize] = useState({
+  const [windowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
     height: typeof window !== "undefined" ? window.innerHeight : 0,
   });

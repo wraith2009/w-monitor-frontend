@@ -103,10 +103,14 @@ const MonitorsTable = () => {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-gray-300">
-                  {monitor.uptime !== undefined ? `${monitor.uptime}%` : "—"}
+                  {monitor.uptimePercentage !== undefined
+                    ? `${monitor.uptimePercentage}%`
+                    : "—"}
                 </TableCell>
                 <TableCell className="text-gray-300 font-mono text-sm">
-                  {monitor.responseTime ? `${monitor.responseTime}ms` : "—"}
+                  {monitor.averageResponseTime
+                    ? `${monitor.averageResponseTime}ms`
+                    : "—"}
                 </TableCell>
               </TableRow>
             ))}
