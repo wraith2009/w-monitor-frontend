@@ -13,7 +13,7 @@ import LogPage from "@/pages/dashboard/logs/logPage";
 
 const breadcrumbMap = [
   {
-    path: "/dashboard/monitors/:id",
+    path: "/dashboard/monitors/:id/:slug",
     crumbs: ["Dashboard", "Monitors", "Monitor Details"],
   },
   { path: "/dashboard/monitors", crumbs: ["Dashboard", "Monitors"] },
@@ -97,7 +97,7 @@ const DashboardLayout = () => {
             <Routes>
               <Route index element={<DashboardOverview />} />
               <Route path="monitors" element={<MonitorsListPage />} />
-              <Route path="monitors/:id" element={<MonitorPage />} />
+              <Route path="monitors/:id/:slug" element={<MonitorPage />} />
               <Route path="incidents" element={<IncidentPage />} />
               <Route path="logs" element={<LogPage />} />
               {/* Uncomment these routes when ready */}

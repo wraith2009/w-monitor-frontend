@@ -329,7 +329,7 @@ export function IncidentsScreen() {
         </div>
       )}
 
-      <div className="space-y-4 grid grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
         <AnimatePresence mode="popLayout">
           {filteredIncidents.map((incident) => (
             <IncidentCard

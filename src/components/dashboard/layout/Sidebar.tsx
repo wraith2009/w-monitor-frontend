@@ -1,7 +1,6 @@
 import {
   User,
   Activity,
-  TrendingUp,
   Settings,
   LogOut,
   BarChart3,
@@ -19,7 +18,6 @@ const menuItems = [
   { title: "Dashboard", icon: BarChart3, path: "/dashboard" },
   { title: "Monitors", icon: Activity, path: "/dashboard/monitors" },
   { title: "Incidents", icon: AlertCircle, path: "/dashboard/incidents" },
-  { title: "Analytics", icon: TrendingUp, path: "/dashboard/analytics" },
   { title: "Logs", icon: Logs, path: "/dashboard/logs" },
   { title: "Settings", icon: Settings, path: "/dashboard/settings" },
 ];

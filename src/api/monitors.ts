@@ -19,7 +19,7 @@ export interface Monitor {
     createdAt: string;
     updatedAt: string;
     status?: MonitorStatus;       // optional, for UI state
-    uptime?: number;              // e.g. 99.95
+    uptimePercentage?: number;              // e.g. 99.95
     responseTime?: number;        // e.g. 210ms
 }
 
@@ -90,8 +90,8 @@ export const monitorsApi = {
         return response.data.data;
     },
 
-    getMonitorStatsById: async (id: string): Promise<MonitorMetrics> => {
-        const response = await api.get(`/websites/stats/${id}`);
+    getMonitorStatsBySlug: async (slug: string): Promise<MonitorMetrics> => {
+        const response = await api.get(`/websites/stats/${slug}`);
         return response.data.data;
     },
     getRegionStatsByMonitorId: async (monitorId: number): Promise<MonitorRegionalMetrics> => {

@@ -2,25 +2,29 @@ import OverviewCards from "@/components/dashboard/overview/OverviewCards";
 import WorldMapSection from "@/components/dashboard/overview/DashboardSection";
 import UptimeChart from "@/components/dashboard/overview/UptimeChart";
 import {
-  getMonitorStatsById,
+  getMonitorStatsBySlug,
   // getRegionStatsByMonitorId,
   getUptimeTrendByMonitorId,
 } from "@/hooks/useMonitors";
 import { useParams } from "react-router-dom";
 const MonitorPage = () => {
-  let { id } = useParams<{ id: string }>();
-  if (!id) {
+  let { id, slug } = useParams<{ id: string; slug: string }>();
+  if (!id && !slug) {
     return (
-      <div className="text-red-500 text-center">Monitor ID is required</div>
+      <div className="text-red-500 text-center">
+        Monitor ID & slug are required
+      </div>
     );
   }
-  const monitorId = parseInt(id, 10);
+  const monitorId = parseInt(id!, 10);
   const { data: rawUptimeData, isLoading } =
     getUptimeTrendByMonitorId(monitorId);
   const uptimeData = Array.isArray(rawUptimeData?.trend)
     ? rawUptimeData.trend
     : [];
-  const { data: metrics, isLoading: metricsLoading } = getMonitorStatsById(id);
+  const { data: metrics, isLoading: metricsLoading } = getMonitorStatsBySlug(
+    slug!
+  );
   return (
     <div className="space-y-6">
       {metricsLoading && (

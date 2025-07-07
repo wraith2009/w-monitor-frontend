@@ -45,6 +45,25 @@ export function IncidentCard({
       return `${diffMins}m`;
     }
     const hours = Math.floor(diffMins / 60);
+    if (hours < 24) {
+      return `${hours}h ${diffMins % 60}m`;
+    }
+    const days = Math.floor(hours / 24);
+    const hoursInDay = hours % 24;
+    if (days < 30) {
+      return `${days}d ${hoursInDay}h`;
+    }
+    const months = Math.floor(days / 30);
+    const daysInMonth = days % 30;
+    if (months < 12) {
+      return `${months}mo ${daysInMonth}d`;
+    }
+    const years = Math.floor(months / 12);
+    const monthsInYear = months % 12;
+    if (years > 0) {
+      return `${years}y ${monthsInYear}mo`;
+    }
+
     const mins = diffMins % 60;
     return `${hours}h ${mins}m`;
   };

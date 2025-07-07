@@ -55,11 +55,11 @@ export const useDeleteMonitor = () => {
     });
 };
 
-export const getMonitorStatsById = (id: string) => {
+export const getMonitorStatsBySlug = (slug: string) => {
     return useQuery({
-        queryKey: ['monitorStats', id],
-        queryFn: () => monitorsApi.getMonitorStatsById(id),
-        enabled: !!id,
+        queryKey: ['monitorStats', slug],
+        queryFn: () => monitorsApi.getMonitorStatsBySlug(slug),
+        enabled: !!slug,
     });
 }
 export const getRegionStatsByMonitorId = (monitorId: number) => {
