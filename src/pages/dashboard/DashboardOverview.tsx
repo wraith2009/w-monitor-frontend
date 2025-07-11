@@ -4,16 +4,14 @@ import UptimeChart from "@/components/dashboard/overview/UptimeChart";
 import MonitorsTable from "@/components/dashboard/overview/MonitorsTable";
 import { useUptimeTrend } from "@/hooks/useDashboard";
 import { useDashboardMetrics } from "@/hooks/useDashboard";
+import { EmailVerificationBanner } from "@/components/dashboard/EmailVerificationBanner";
 const DashboardOverview = () => {
   const { data: uptimeData = [], isLoading } = useUptimeTrend();
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: metrics } = useDashboardMetrics();
   return (
     <div className="space-y-6">
-      {metricsLoading && (
-        <div className="text-gray-500 text-center">
-          Loading dashboard metrics...
-        </div>
-      )}
+      <EmailVerificationBanner />
+
       <OverviewCards
         metrics={
           metrics || {

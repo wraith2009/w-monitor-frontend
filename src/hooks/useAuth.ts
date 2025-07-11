@@ -26,19 +26,28 @@ export const useLogin = () => {
 };
 
 export const useRegister = () => {
-    const navigate = useNavigate();
-    const { login } = useAuthStore();
 
     return useMutation({
         mutationFn: authApi.register,
-        onSuccess: (data) => {
-            login(data.token, data.user);
-            toast.success('Account created successfully!');
-            navigate('/dashboard', { replace: true });
+        onSuccess: () => {
+            toast.success('Account created successfully!')
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || 'Registration failed');
         },
     });
 };
+
+export const useResendVerificationEmail = () => {
+
+    return useMutation({
+        mutationFn: authApi.resendVerificationEmail,
+        onSuccess: () => {
+            toast.success('Verification email sent successfully!');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to resend verification email');
+        },
+    });
+}
 

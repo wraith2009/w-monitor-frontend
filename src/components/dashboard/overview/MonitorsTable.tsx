@@ -12,10 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useMonitors } from "@/hooks/useMonitors";
 import LoadingSpinner from "@/components/shared/LoadingSpinner"; // Replace with your spinner component
+import { useAuthStore } from "@/stores/authStore";
 
 const MonitorsTable = () => {
+  const { user } = useAuthStore();
+  if (user?.emailVerified !== true) {
+    return;
+  }
   const { data: monitors, isLoading, error } = useMonitors();
-
   if (isLoading) return <LoadingSpinner />;
   const filteredMonitors = monitors?.filter(
     (monitor) => monitor.isDeleted !== true

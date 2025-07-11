@@ -103,7 +103,7 @@ const OverviewCards = ({ metrics }: overviewCardProps) => {
         metrics?.activeMonitorsByRegion || {}
       ).reduce((a, b) => a + b, 0),
       suffix: "",
-      subtitle: ``,
+      subtitle: `Your active monitors across all regions`,
       icon: Shield,
       color: "text-violet-400",
       glowColor: "shadow-violet-500/10",

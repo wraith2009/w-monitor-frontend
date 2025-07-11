@@ -25,9 +25,9 @@ const statusConfig: Record<
     label: string;
   }
 > = {
-  up: { icon: CheckCircle, color: "text-green-400", label: "UP" },
-  down: { icon: XCircle, color: "text-red-400", label: "DOWN" },
-  degraded: {
+  UP: { icon: CheckCircle, color: "text-green-400", label: "UP" },
+  DOWN: { icon: XCircle, color: "text-red-400", label: "DOWN" },
+  DEGRADED: {
     icon: AlertTriangle,
     color: "text-yellow-400",
     label: "DEGRADED",
@@ -86,8 +86,9 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
       setIsUpdating(false);
     }
   };
+  console.log("MonitorCard rendered for:", monitor);
   // Determine status based on pause state
-  const currentStatus = isPaused ? "degraded" : monitor.status ?? "down";
+  const currentStatus = isPaused ? "DEGRADED" : monitor.status ?? "DOWN";
   const { icon: Icon, color, label } = statusConfig[currentStatus];
   const displayLabel = isPaused ? "PAUSED" : label;
 

@@ -20,7 +20,7 @@ const breadcrumbMap = [
   { path: "/dashboard/incidents", crumbs: ["Dashboard", "Incidents"] },
   { path: "/dashboard/analytics", crumbs: ["Dashboard", "Analytics"] },
   { path: "/dashboard/settings", crumbs: ["Dashboard", "Settings"] },
-  { path: "/dashboard/logs", crumbs: ["Dashboard", "Logs  "] },
+  { path: "/dashboard/logs", crumbs: ["Dashboard", "Logs"] },
   { path: "/", crumbs: ["Dashboard", "Overview"] },
 ];
 

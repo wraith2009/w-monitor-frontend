@@ -42,6 +42,7 @@ export interface AuthResponse {
         id: string;
         email: string;
         name: string;
+        emailVerified: boolean | null;
     };
 }
 
@@ -53,6 +54,11 @@ export const authApi = {
 
     register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
         const response = await api.post('/register', credentials);
+        return response.data;
+    },
+    resendVerificationEmail: async (): Promise<void> => {
+        console.log('Resending verification email...');
+        const response = await api.post('/request-email-verification');
         return response.data;
     },
 };

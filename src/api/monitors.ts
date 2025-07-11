@@ -1,5 +1,5 @@
 import { api } from './auth';
-export type MonitorStatus = 'up' | 'down' | 'degraded';
+export type MonitorStatus = 'UP' | 'DOWN' | 'DEGRADED';
 
 
 export interface Monitor {
