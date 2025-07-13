@@ -1,3 +1,6 @@
+"use client";
+
+import type React from "react";
 import {
   CheckCircle,
   XCircle,
@@ -17,6 +20,7 @@ import type { Monitor, MonitorStatus } from "@/api/monitors";
 import { useUpdateMonitor, useDeleteMonitor } from "@/hooks/useMonitors";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+
 const statusConfig: Record<
   MonitorStatus,
   {
@@ -36,7 +40,7 @@ const statusConfig: Record<
 
 interface MonitorCardProps {
   monitor: Monitor;
-  onEdit?: (monitor: Monitor) => void;
+  onEdit: (monitor: Monitor) => void;
   onDelete?: (monitor: Monitor) => void;
 }
 
@@ -46,13 +50,12 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
   const updateMonitor = useUpdateMonitor();
   const deleteMonitor = useDeleteMonitor();
   const navigate = useNavigate();
+
   const handleTogglePause = async (e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (isUpdating) return;
 
     setIsUpdating(true);
-
     try {
       const payload = {
         id: monitor.id,
@@ -68,35 +71,55 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
 
       await updateMonitor.mutateAsync(payload);
       setIsPaused(!isPaused);
+      toast.success(`Monitor ${!isPaused ? "paused" : "resumed"} successfully`);
     } catch (error) {
       console.error("Failed to toggle monitor pause state:", error);
+      toast.error("Failed to update monitor status");
     } finally {
       setIsUpdating(false);
     }
   };
+
   const handleDeleteMonitor = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isUpdating) return;
+
+    // Add confirmation dialog
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${monitor.websiteName}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
     setIsUpdating(true);
     try {
       await deleteMonitor.mutateAsync(monitor.id.toString());
       onDelete?.(monitor);
+      toast.success("Monitor deleted successfully");
     } catch (error) {
       console.error("Failed to delete monitor:", error);
+      toast.error("Failed to delete monitor");
     } finally {
       setIsUpdating(false);
     }
   };
+
   console.log("MonitorCard rendered for:", monitor);
+
   // Determine status based on pause state
   const currentStatus = isPaused ? "DEGRADED" : monitor.status ?? "DOWN";
   const { icon: Icon, color, label } = statusConfig[currentStatus];
   const displayLabel = isPaused ? "PAUSED" : label;
 
   const handleEdit = (e: React.MouseEvent) => {
+    console.log("Edit button clicked!");
     console.log("Edit monitor:", monitor);
+    e.preventDefault();
     e.stopPropagation();
-    onEdit?.(monitor);
+    e.nativeEvent.stopImmediatePropagation();
+    onEdit(monitor);
   };
 
   return (
@@ -171,6 +194,7 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
                   )}
                 </Button>
               </motion.div>
+
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
                   variant="ghost"
@@ -188,6 +212,7 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
                   <Globe className="h-3.5 w-3.5" />
                 </Button>
               </motion.div>
+
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
                   variant="ghost"

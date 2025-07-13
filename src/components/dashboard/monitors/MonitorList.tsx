@@ -11,21 +11,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMonitors } from "@/hooks/useMonitors";
+import { useMonitors, useUpdateMonitor } from "@/hooks/useMonitors";
 import MonitorCard from "./MonitorCard";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import MonitorStatsOverview from "./MonitorStatsOverview";
 import { motion, AnimatePresence } from "framer-motion";
 import { AddMonitorModal } from "./AddMonitorModal";
 import { useCreateMonitor } from "@/hooks/useMonitors";
-
+import type { UpdateMonitorData } from "@/api/monitors";
+import type { Monitor } from "@/api/monitors";
+import { EditMonitorModal } from "./EditMonitorModal";
 const MonitorsList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
   const { data: monitors, isLoading, error } = useMonitors();
   const { mutateAsync: createMonitor } = useCreateMonitor();
+  const updateMonitor = useUpdateMonitor();
+  const handleUpdateMonitor = async (data: UpdateMonitorData) => {
+    try {
+      await updateMonitor.mutateAsync(data);
+      setIsEditModalOpen(false);
+      setEditingMonitor(null);
+    } catch (error) {
+      console.error("Failed to update monitor:", error);
+      throw error;
+    }
+  };
+
+  const handleEditMonitor = (monitor: Monitor) => {
+    setEditingMonitor(monitor);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteMonitor = (monitor: Monitor) => {
+    // Monitor deletion is handled in the MonitorCard component
+    console.log("Monitor deleted:", monitor.websiteName);
+  };
+
   const filtered = monitors?.filter((m) => {
     const matchesSearch =
       m.websiteName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -207,7 +232,11 @@ const MonitorsList = () => {
                   transition: { duration: 0.2, ease: "easeOut" },
                 }}
               >
-                <MonitorCard monitor={monitor} />
+                <MonitorCard
+                  monitor={monitor}
+                  onEdit={handleEditMonitor}
+                  onDelete={handleDeleteMonitor}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -307,6 +336,15 @@ const MonitorsList = () => {
             console.error("Failed to create monitor:", err);
           }
         }}
+      />
+      <EditMonitorModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingMonitor(null);
+        }}
+        onSubmit={handleUpdateMonitor}
+        monitor={editingMonitor}
       />
     </motion.div>
   );
