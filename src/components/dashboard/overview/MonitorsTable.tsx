@@ -93,12 +93,12 @@ const MonitorsTable = () => {
                   <Badge
                     variant="secondary"
                     className={
-                      monitor.status === "up"
+                      monitor.status === "UP"
                         ? "bg-gray-700/50 text-gray-300"
                         : "bg-gray-600/50 text-gray-200"
                     }
                   >
-                    {monitor.status === "up" ? (
+                    {monitor.status === "UP" ? (
                       <CheckCircle className="w-3 h-3 mr-1" />
                     ) : (
                       <XCircle className="w-3 h-3 mr-1" />
