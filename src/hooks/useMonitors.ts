@@ -78,3 +78,38 @@ export const getUptimeTrendByMonitorSlug = (slug: string) => {
 }
 
 
+export const useAddMonitorRecipient = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ email, monitorId }: { email: string; monitorId: number }) => monitorsApi.addMonitorRecipient(email, monitorId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['monitorBySlug'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to add recipient');
+        },
+    });
+}
+export const useDeleteMonitorRecipient = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ email, monitorId }: { email: string; monitorId: number }) => monitorsApi.deleteMonitorRecipient(email, monitorId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['monitorBySlug'] });
+            toast.success('Recipient deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to delete recipient');
+        },
+    });
+}
+
+export const useMonitorBySlug = (slug: string) => {
+    return useQuery({
+        queryKey: ['monitorBySlug', slug],
+        queryFn: () => monitorsApi.fetchMonitorBySlug(slug),
+        enabled: !!slug,
+    });
+}

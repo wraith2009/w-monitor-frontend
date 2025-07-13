@@ -1,3 +1,4 @@
+
 import { api } from './auth';
 export type MonitorStatus = 'UP' | 'DOWN' | 'DEGRADED';
 
@@ -21,8 +22,15 @@ export interface Monitor {
     status?: MonitorStatus;       // optional, for UI state
     uptimePercentage?: number;              // e.g. 99.95
     averageResponseTime?: number;        // e.g. 210ms
+    alertRecipients?: AlertRecipient[]; // emails of recipients
 }
 
+interface AlertRecipient {
+    id: number;
+    email: string;
+    monitorId: number;
+    createdAt: string;
+}
 // Omit fields that are server-generated or not needed during creation
 export type CreateMonitorData = Omit<
     Monitor,
@@ -105,6 +113,18 @@ export const monitorsApi = {
         trend: { hour: string; uptime: number }[];
     }> => {
         const response = await api.get(`/websites/uptime-trend/${slug}`);
+        return response.data.data;
+    },
+    addMonitorRecipient: async (email: string, monitorId: number): Promise<void> => {
+        const response = await api.post(`/monitors/${monitorId}/recipients`, { email });
+        return response.data.data;
+    },
+    deleteMonitorRecipient: async (email: string, monitorId: number): Promise<void> => {
+        const response = await api.delete(`/monitors/${monitorId}/recipients`, { data: { email } });
+        return response.data.data;
+    },
+    fetchMonitorBySlug: async (slug: string): Promise<Monitor> => {
+        const response = await api.get(`/websites/slug/${slug}`);
         return response.data.data;
     }
 }

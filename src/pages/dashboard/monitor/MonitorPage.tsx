@@ -1,27 +1,36 @@
 import OverviewCards from "@/components/dashboard/overview/OverviewCards";
 import WorldMapSection from "@/components/dashboard/overview/DashboardSection";
 import UptimeChart from "@/components/dashboard/overview/UptimeChart";
+import { MonitorRecipientSection } from "@/components/dashboard/monitors/monitorRecepientSection";
 import {
   getMonitorStatsBySlug,
   getRegionStatsByMonitorSlug,
   getUptimeTrendByMonitorSlug,
+  useMonitorBySlug,
 } from "@/hooks/useMonitors";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
+
 const MonitorPage = () => {
-  let { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const { data: monitor } = slug ? useMonitorBySlug(slug) : { data: null };
+  console.log("Monitor data:", monitor);
+
   if (!slug) {
     return (
       <div className="text-red-500 text-center">Monitor slug is required</div>
     );
   }
-  const { data: rawUptimeData, isLoading } = getUptimeTrendByMonitorSlug(slug!);
-  const { data: regionStat } = getRegionStatsByMonitorSlug(slug!);
+
+  const { data: rawUptimeData, isLoading } = getUptimeTrendByMonitorSlug(slug);
+  const { data: regionStat } = getRegionStatsByMonitorSlug(slug);
+
   const uptimeData = Array.isArray(rawUptimeData?.trend)
     ? rawUptimeData.trend
     : [];
-  const { data: metrics, isLoading: metricsLoading } = getMonitorStatsBySlug(
-    slug!
-  );
+
+  const { data: metrics, isLoading: metricsLoading } =
+    getMonitorStatsBySlug(slug);
 
   const content = (
     <div className="space-y-6">
@@ -30,6 +39,7 @@ const MonitorPage = () => {
           Loading dashboard metrics...
         </div>
       )}
+
       <OverviewCards
         metrics={
           metrics || {
@@ -45,9 +55,20 @@ const MonitorPage = () => {
         <WorldMapSection regions={regionStat?.regionStats || []} />
         <UptimeChart uptimeData={uptimeData} isLoading={isLoading} />
       </div>
+
+      {/* Emergency Contact Section - Only show in dashboard context */}
+      {location.pathname.startsWith("/dashboard") && monitor && (
+        <MonitorRecipientSection
+          monitorId={monitor.id}
+          alertRecipients={monitor.alertRecipients || []}
+          monitorName={monitor.websiteName}
+        />
+      )}
     </div>
   );
+
   const isDashboardContext = location.pathname.startsWith("/dashboard");
+
   if (isDashboardContext) {
     return content;
   } else {
