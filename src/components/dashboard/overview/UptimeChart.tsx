@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import { useState, useEffect } from "react";
 import type { UptimeChartData } from "@/api/dashboard";
+
+import { Skeleton } from "@/components/ui/skeleton";
 const UptimeChart = ({
   uptimeData,
   isLoading,
@@ -78,8 +80,13 @@ const UptimeChart = ({
       </CardHeader>
       <CardContent className="pt-0 flex flex-col gap-4 justify-between">
         {isLoading ? (
-          <div className="h-[200px] flex items-center justify-center">
-            <div className="text-gray-500">Loading...</div>
+          <div className="flex flex-col space-y-4">
+            <Skeleton className="h-[200px] w-full rounded-md" />
+            <div className="flex justify-between">
+              <Skeleton className="h-6 w-20 rounded-md" />
+              <Skeleton className="h-6 w-20 rounded-md" />
+              <Skeleton className="h-6 w-20 rounded-md" />
+            </div>
           </div>
         ) : uptimeData.length === 0 ? (
           <div className="h-[200px] flex items-center justify-center">

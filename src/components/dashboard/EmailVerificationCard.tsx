@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -14,13 +13,11 @@ import { Button } from "@/components/ui/button";
 
 export const EmailVerificationCard = () => {
   const { user } = useAuthStore();
-  const [emailSent, setEmailSent] = useState(false);
   const resendMutation = useResendVerificationEmail();
 
   const handleResendEmail = () => {
     if (user?.email) {
       resendMutation.mutate();
-      setEmailSent(true);
     }
   };
 
@@ -73,7 +70,7 @@ export const EmailVerificationCard = () => {
           >
             <Button
               onClick={handleResendEmail}
-              disabled={resendMutation.isPending || emailSent}
+              disabled={resendMutation.isPending || resendMutation.isSuccess}
               className="bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-lg transition-all duration-200 disabled:bg-purple-600/50 group cursor-pointer"
             >
               {resendMutation.isPending ? (
@@ -81,9 +78,9 @@ export const EmailVerificationCard = () => {
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   Sending...
                 </>
-              ) : emailSent ? (
+              ) : resendMutation.isSuccess ? (
                 <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-400" />
                   Email Sent!
                 </>
               ) : (

@@ -7,7 +7,13 @@ import { useDashboardMetrics } from "@/hooks/useDashboard";
 import { EmailVerificationBanner } from "@/components/dashboard/EmailVerificationBanner";
 const DashboardOverview = () => {
   const { data: uptimeData = [], isLoading } = useUptimeTrend();
-  const { data: metrics } = useDashboardMetrics();
+  const { data: metrics, isLoading: metricLoading } = useDashboardMetrics();
+  console.log("loading metrics", metricLoading);
+  console.log("loading uptime data", isLoading);
+  if (isLoading || metricLoading) {
+    return <div className="space-y-6">Loading</div>;
+  }
+
   return (
     <div className="space-y-6">
       <EmailVerificationBanner />

@@ -1,52 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, RefreshCw, CheckCircle } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useResendVerificationEmail } from "@/hooks/useAuth";
 
 interface EmailVerificationBannerProps {
   onDismiss?: () => void;
 }
-
-const resendVerificationEmail = async (email: string) => {
-  const response = await fetch("/api/auth/resend-verification", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to resend verification email");
-  }
-
-  return response.json();
-};
 
 export const EmailVerificationBanner = ({
   onDismiss,
 }: EmailVerificationBannerProps) => {
   const { user } = useAuthStore();
   const [isDismissed, setIsDismissed] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-
-  const resendMutation = useMutation({
-    mutationFn: () => resendVerificationEmail(user?.email || ""),
-    onSuccess: () => {
-      setEmailSent(true);
-      toast.success("Verification email sent! Check your inbox.");
-      // Reset the emailSent state after 5 seconds
-      setTimeout(() => setEmailSent(false), 5000);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to send verification email");
-    },
-  });
+  const resendMutation = useResendVerificationEmail();
 
   const handleDismiss = () => {
     setIsDismissed(true);
@@ -58,7 +27,7 @@ export const EmailVerificationBanner = ({
       resendMutation.mutate();
     }
   };
-
+  console.log("useer", user);
   // Don't show banner if user is verified or if banner is dismissed
   if (user?.emailVerified || isDismissed) {
     return null;
@@ -94,7 +63,6 @@ export const EmailVerificationBanner = ({
                       <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center border border-purple-500/30">
                         <Mail className="h-6 w-6 text-purple-400" />
                       </div>
-                      {/* Pulsing ring */}
                       <div className="absolute inset-0 w-12 h-12 bg-purple-500/20 rounded-full animate-ping" />
                     </div>
                   </motion.div>
@@ -124,7 +92,9 @@ export const EmailVerificationBanner = ({
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Button
                           onClick={handleResendEmail}
-                          disabled={resendMutation.isPending || emailSent}
+                          disabled={
+                            resendMutation.isPending || resendMutation.isSuccess
+                          }
                           className="bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-lg transition-all duration-200 disabled:bg-purple-600/50 group cursor-pointer"
                         >
                           {resendMutation.isPending ? (
@@ -132,9 +102,9 @@ export const EmailVerificationBanner = ({
                               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                               Sending...
                             </>
-                          ) : emailSent ? (
+                          ) : resendMutation.isSuccess ? (
                             <>
-                              <CheckCircle className="h-4 w-4 mr-2" />
+                              <CheckCircle className="h-4 w-4 mr-2 text-green-400" />
                               Email Sent!
                             </>
                           ) : (
@@ -174,7 +144,7 @@ export const EmailVerificationBanner = ({
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ delay: 0.5, duration: 0.8 }}
-                  className="absolute bottom-0 left-0 right-0  bg-gradient-to-r from-purple-500 via-[#7920ad] to-purple-500 origin-left rounded-b-lg h-1.5"
+                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-purple-500 via-[#7920ad] to-purple-500 origin-left rounded-b-lg h-1.5"
                 />
               </div>
             </div>
