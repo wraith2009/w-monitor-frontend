@@ -1,8 +1,6 @@
-"use client";
-
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,112 +12,69 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Eye, EyeOff, Loader2, Check, X, AlertCircle } from "lucide-react";
-import { useRegister } from "@/hooks/useAuth";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Shield,
+  AlertCircle,
+  Check,
+  X,
+  CheckCircle,
+} from "lucide-react";
+import { useResetPassword } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import validatePasswordStrength from "@/utils/validatePasswordStrength";
 import type { PasswordStrength } from "@/utils/validatePasswordStrength";
-interface ValidationErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-  company?: string;
+interface ResetPasswordFormProps {
+  token: string | null;
 }
 
-const SignUpForm = () => {
+const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
     password: "",
+    newPassword: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
-    {}
-  );
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
     score: 0,
     feedback: [],
     isValid: false,
   });
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   const navigate = useNavigate();
-  const signupMutation = useRegister();
+  const resetPasswordMutation = useResetPassword();
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Form validation
-  const validateForm = (): boolean => {
-    const errors: ValidationErrors = {};
-
-    // Name validation
-    if (!formData.name.trim()) {
-      errors.name = "Full name is required";
-    } else if (formData.name.trim().length < 2) {
-      errors.name = "Name must be at least 2 characters";
+  useEffect(() => {
+    if (!token) {
+      navigate("/forgot-password");
     }
-
-    // Email validation
-    if (!formData.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!validateEmail(formData.email)) {
-      errors.email = "Please enter a valid email address";
-    }
-
-    // Password validation
-    if (!formData.password) {
-      errors.password = "Password is required";
-    } else if (!passwordStrength.isValid) {
-      errors.password = "Password does not meet requirements";
-    }
-
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  }, [token, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    if (!validateForm()) {
+    if (!passwordStrength.isValid) {
       return;
     }
 
-    setIsLoading(true);
+    if (formData.password !== formData.confirmPassword) {
+      return;
+    }
 
     try {
-      await signupMutation.mutateAsync({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        password: formData.password,
+      await resetPasswordMutation.mutateAsync({
+        token: token!,
+        newPassword: formData.password,
+        confirmPassword: formData.confirmPassword,
       });
-      navigate("/signin", {
-        state: {
-          email: formData.email.trim(),
-          password: formData.password,
-        },
-      });
+      setResetSuccess(true);
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Signup failed. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
+      // Error is handled by the mutation
     }
   };
 
@@ -129,14 +84,6 @@ const SignUpForm = () => {
       ...formData,
       [name]: value,
     });
-
-    // Clear validation error for this field
-    if (validationErrors[name as keyof ValidationErrors]) {
-      setValidationErrors({
-        ...validationErrors,
-        [name]: undefined,
-      });
-    }
 
     // Update password strength in real-time
     if (name === "password") {
@@ -185,108 +132,94 @@ const SignUpForm = () => {
     },
   };
 
+  if (resetSuccess) {
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 w-full sm:max-w-md mx-4 md:max-w-lg"
+      >
+        <motion.div variants={itemVariants}>
+          <Card className="bg-[#1f1f1f] border-gray-800/50 text-xl shadow-2xl backdrop-blur-sm">
+            <CardHeader className="text-center pb-6">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="mx-auto mb-4"
+              >
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center border border-green-500/30">
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                </div>
+              </motion.div>
+              <CardTitle className="text-2xl font-semibold text-white">
+                Password Reset Successful
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                Your password has been successfully updated
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <motion.div variants={itemVariants} className="space-y-6">
+                <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
+                  <Shield className="h-6 w-6 text-green-400 mx-auto mb-2" />
+                  <p className="text-gray-300 text-sm">
+                    You can now sign in with your new password
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => navigate("/signin")}
+                  className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200"
+                >
+                  Continue to Sign In
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          variants={itemVariants}
+          className="mt-8 text-center text-xs text-gray-500"
+        >
+          <p>© 2024 Uptime Monitor. Secure and reliable monitoring.</p>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  if (!token) {
+    return null; // Will redirect
+  }
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="relative z-10 w-full max-w-md mx-4 md:max-w-lg"
+      className="relative z-10 w-full sm:max-w-md mx-4 md:max-w-lg"
     >
       <motion.div variants={itemVariants}>
         <Card className="bg-[#1f1f1f] border-gray-800/50 text-xl shadow-2xl backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-3xl font-semibold text-white">
-              Create Account
+              Reset Password
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Join Uptime Monitor to start monitoring your services
+              Enter your new password to complete the reset process
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Full Name */}
-              <motion.div variants={itemVariants} className="space-y-2">
-                <Label
-                  htmlFor="name"
-                  className="text-gray-300 text-sm font-medium"
-                >
-                  Full Name *
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedField("name")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="Enter your full name"
-                    className={`bg-gray-800/50 border-gray-700/50 text-white placeholder-gray-500 transition-all duration-200 ${
-                      focusedField === "name"
-                        ? "border-gray-600 bg-gray-800/70 shadow-lg"
-                        : "hover:border-gray-600/70"
-                    } ${validationErrors.name ? "border-red-500/50" : ""}`}
-                    required
-                  />
-                  {validationErrors.name && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-1 mt-1 text-red-400 text-xs"
-                    >
-                      <AlertCircle className="h-3 w-3" />
-                      {validationErrors.name}
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* Email */}
-              <motion.div variants={itemVariants} className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-gray-300 text-sm font-medium"
-                >
-                  Email Address *
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="Enter your email"
-                    className={`bg-gray-800/50 border-gray-700/50 text-white placeholder-gray-500 transition-all duration-200 ${
-                      focusedField === "email"
-                        ? "border-gray-600 bg-gray-800/70 shadow-lg"
-                        : "hover:border-gray-600/70"
-                    } ${validationErrors.email ? "border-red-500/50" : ""}`}
-                    required
-                  />
-                  {validationErrors.email && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-1 mt-1 text-red-400 text-xs"
-                    >
-                      <AlertCircle className="h-3 w-3" />
-                      {validationErrors.email}
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* Password */}
+              {/* New Password */}
               <motion.div variants={itemVariants} className="space-y-2">
                 <Label
                   htmlFor="password"
                   className="text-gray-300 text-sm font-medium"
                 >
-                  Password *
+                  New Password
                 </Label>
                 <div className="relative">
                   <Input
@@ -302,7 +235,7 @@ const SignUpForm = () => {
                       focusedField === "password"
                         ? "border-gray-600 bg-gray-800/70 shadow-lg"
                         : "hover:border-gray-600/70"
-                    } ${validationErrors.password ? "border-red-500/50" : ""}`}
+                    }`}
                     required
                   />
                   <motion.button
@@ -358,17 +291,6 @@ const SignUpForm = () => {
                     )}
                   </motion.div>
                 )}
-
-                {validationErrors.password && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-1 mt-1 text-red-400 text-xs"
-                  >
-                    <AlertCircle className="h-3 w-3" />
-                    {validationErrors.password}
-                  </motion.div>
-                )}
               </motion.div>
 
               {/* Confirm Password */}
@@ -377,7 +299,7 @@ const SignUpForm = () => {
                   htmlFor="confirmPassword"
                   className="text-gray-300 text-sm font-medium"
                 >
-                  Confirm Password *
+                  Confirm New Password
                 </Label>
                 <div className="relative">
                   <Input
@@ -393,10 +315,6 @@ const SignUpForm = () => {
                       focusedField === "confirmPassword"
                         ? "border-gray-600 bg-gray-800/70 shadow-lg"
                         : "hover:border-gray-600/70"
-                    } ${
-                      validationErrors.confirmPassword
-                        ? "border-red-500/50"
-                        : ""
                     }`}
                     required
                   />
@@ -426,19 +344,19 @@ const SignUpForm = () => {
                   )}
                 </div>
 
-                {validationErrors.confirmPassword && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-1 mt-1 text-red-400 text-xs"
-                  >
-                    <AlertCircle className="h-3 w-3" />
-                    {validationErrors.confirmPassword}
-                  </motion.div>
-                )}
+                {formData.confirmPassword &&
+                  formData.password !== formData.confirmPassword && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-1 mt-1 text-red-400 text-xs"
+                    >
+                      <AlertCircle className="h-3 w-3" />
+                      Passwords do not match
+                    </motion.div>
+                  )}
               </motion.div>
 
-              {/* Submit Button */}
               <motion.div variants={itemVariants} className="pt-2">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
@@ -448,16 +366,20 @@ const SignUpForm = () => {
                   <Button
                     type="submit"
                     className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200 h-11 font-medium shadow-lg"
-                    disabled={isLoading}
+                    disabled={
+                      resetPasswordMutation.isPending ||
+                      !passwordStrength.isValid ||
+                      formData.password !== formData.confirmPassword
+                    }
                   >
-                    {isLoading ? (
+                    {resetPasswordMutation.isPending ? (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="flex items-center"
                       >
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating Account...
+                        Resetting Password...
                       </motion.div>
                     ) : (
                       <motion.div
@@ -465,61 +387,31 @@ const SignUpForm = () => {
                         animate={{ opacity: 1 }}
                         className="flex items-center justify-center"
                       >
-                        Create Account
+                        <Shield className="mr-2 h-4 w-4" />
+                        Reset Password
                       </motion.div>
                     )}
                   </Button>
                 </motion.div>
               </motion.div>
 
-              {error && (
+              {resetPasswordMutation.error && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
                 >
-                  <p className="text-red-400 text-sm text-center">{error}</p>
+                  <p className="text-red-400 text-sm text-center">
+                    {resetPasswordMutation.error?.message ||
+                      "Failed to reset password"}
+                  </p>
                 </motion.div>
               )}
             </form>
-
-            <motion.div variants={itemVariants} className="mt-8 text-center">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-800/50" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-[#1f1f1f] px-2 text-gray-500">
-                    Already have an account?
-                  </span>
-                </div>
-              </div>
-              <motion.div
-                className="mt-4"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <button
-                  type="button"
-                  onClick={() => navigate("/signin")}
-                  className="inline-flex items-center cursor-pointer text-sm text-gray-400 hover:text-white transition-colors duration-200 group"
-                >
-                  Sign in to your account
-                  <motion.span
-                    className="ml-1 group-hover:translate-x-1 transition-transform duration-200"
-                    initial={{ x: 0 }}
-                    whileHover={{ x: 4 }}
-                  >
-                    →
-                  </motion.span>
-                </button>
-              </motion.div>
-            </motion.div>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Footer */}
       <motion.div
         variants={itemVariants}
         className="mt-8 text-center text-xs text-gray-500"
@@ -530,4 +422,4 @@ const SignUpForm = () => {
   );
 };
 
-export default SignUpForm;
+export default ResetPasswordForm;

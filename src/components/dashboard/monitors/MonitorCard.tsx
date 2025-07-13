@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Monitor, MonitorStatus } from "@/api/monitors";
 import { useUpdateMonitor, useDeleteMonitor } from "@/hooks/useMonitors";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 const statusConfig: Record<
   MonitorStatus,
@@ -45,6 +45,7 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const updateMonitor = useUpdateMonitor();
   const deleteMonitor = useDeleteMonitor();
+  const navigate = useNavigate();
   const handleTogglePause = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -100,166 +101,145 @@ const MonitorCard = ({ monitor, onEdit, onDelete }: MonitorCardProps) => {
 
   return (
     <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-      <Link to={`/dashboard/monitors/${monitor.slug}`}>
-        <Card
-          className={`bg-[#1f1f1f] border-gray-800/50 hover:bg-gray-800/20 transition-colors duration-200 group ${
-            isPaused ? "opacity-70" : ""
-          }`}
-        >
-          <CardContent className="p-6 space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
+      <Card
+        className={`bg-[#1f1f1f] border-gray-800/50 hover:bg-gray-800/20 transition-colors duration-200 group ${
+          isPaused ? "opacity-70" : ""
+        }`}
+        onClick={() => navigate(`/dashboard/monitors/${monitor.slug}`)}
+      >
+        <CardContent className="p-6 space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <Badge
+                  variant="secondary"
+                  className={`bg-gray-800 border ${
+                    isPaused ? "text-yellow-400" : color
+                  } shrink-0`}
+                >
+                  {Icon && <Icon className="w-3 h-3 mr-1" />}
+                  {displayLabel}
+                </Badge>
+                {isPaused && (
                   <Badge
-                    variant="secondary"
-                    className={`bg-gray-800 border ${
-                      isPaused ? "text-yellow-400" : color
-                    } shrink-0`}
+                    variant="outline"
+                    className="text-xs text-gray-400 border-gray-600"
                   >
-                    {Icon && <Icon className="w-3 h-3 mr-1" />}
-                    {displayLabel}
+                    Monitoring Paused
                   </Badge>
-                  {isPaused && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs text-gray-400 border-gray-600"
-                    >
-                      Monitoring Paused
-                    </Badge>
+                )}
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-1">
+                {monitor.websiteName}
+              </h3>
+              <p className="text-sm text-gray-400 break-all line-clamp-1">
+                {monitor.url}
+              </p>
+            </div>
+
+            {/* Action Buttons - Hidden by default, shown on hover */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-4">
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50"
+                  onClick={handleEdit}
+                  title="Edit Monitor"
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                </Button>
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 text-gray-400 hover:bg-gray-700/50 ${
+                    isPaused ? "hover:text-green-400" : "hover:text-yellow-400"
+                  } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={handleTogglePause}
+                  disabled={isUpdating}
+                  title={isPaused ? "Resume Monitoring" : "Pause Monitoring"}
+                >
+                  {isUpdating ? (
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : isPaused ? (
+                    <Play className="h-3.5 w-3.5" />
+                  ) : (
+                    <Pause className="h-3.5 w-3.5" />
                   )}
-                </div>
-                <h3 className="text-white font-semibold text-lg mb-1">
-                  {monitor.websiteName}
-                </h3>
-                <p className="text-sm text-gray-400 break-all line-clamp-1">
-                  {monitor.url}
-                </p>
-              </div>
-
-              {/* Action Buttons - Hidden by default, shown on hover */}
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-4">
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const publicUrl = `${window.location.origin}/monitor/${monitor.slug}`;
+                    navigator.clipboard.writeText(publicUrl);
+                    toast.success("Public link copied to clipboard!");
+                  }}
+                  title="Copy Public Link"
                 >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50"
-                    onClick={handleEdit}
-                    title="Edit Monitor"
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                  </Button>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  <Globe className="h-3.5 w-3.5" />
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-gray-700/50"
+                  onClick={handleDeleteMonitor}
+                  title="Delete Monitor"
                 >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-8 w-8 p-0 text-gray-400 hover:bg-gray-700/50 ${
-                      isPaused
-                        ? "hover:text-green-400"
-                        : "hover:text-yellow-400"
-                    } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={handleTogglePause}
-                    disabled={isUpdating}
-                    title={isPaused ? "Resume Monitoring" : "Pause Monitoring"}
-                  >
-                    {isUpdating ? (
-                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    ) : isPaused ? (
-                      <Play className="h-3.5 w-3.5" />
-                    ) : (
-                      <Pause className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const publicUrl = `${window.location.origin}/monitor/${monitor.slug}`;
-                      navigator.clipboard.writeText(publicUrl);
-                      toast.success("Public link copied to clipboard!");
-                    }}
-                    title="Copy Public Link"
-                  >
-                    <Globe className="h-3.5 w-3.5" />
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-gray-700/50"
-                    onClick={handleDeleteMonitor}
-                    title="Delete Monitor"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </motion.div>
-              </div>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </motion.div>
             </div>
+          </div>
 
-            {/* Stats Section */}
-            <div className="flex justify-between text-sm text-gray-400 pt-2 border-t border-gray-800/50">
-              <span className="flex items-center">
-                Uptime:{" "}
-                <span
-                  className={`ml-1 ${
-                    isPaused ? "text-gray-500" : "text-white"
-                  }`}
-                >
-                  {isPaused
-                    ? "--"
-                    : `${monitor.uptimePercentage?.toFixed(2) ?? "--"}%`}
-                </span>
+          {/* Stats Section */}
+          <div className="flex justify-between text-sm text-gray-400 pt-2 border-t border-gray-800/50">
+            <span className="flex items-center">
+              Uptime:{" "}
+              <span
+                className={`ml-1 ${isPaused ? "text-gray-500" : "text-white"}`}
+              >
+                {isPaused
+                  ? "--"
+                  : `${monitor.uptimePercentage?.toFixed(2) ?? "--"}%`}
               </span>
-              <span className="flex items-center">
-                Response:{" "}
-                <span
-                  className={`ml-1 ${
-                    isPaused ? "text-gray-500" : "text-white"
-                  }`}
-                >
-                  {isPaused
-                    ? "--"
-                    : `${monitor.averageResponseTime?.toFixed(2) ?? "--"}ms`}
-                </span>
+            </span>
+            <span className="flex items-center">
+              Response:{" "}
+              <span
+                className={`ml-1 ${isPaused ? "text-gray-500" : "text-white"}`}
+              >
+                {isPaused
+                  ? "--"
+                  : `${monitor.averageResponseTime?.toFixed(2) ?? "--"}ms`}
               </span>
-              <span className="flex items-center">
-                <Globe className="w-3 h-3 mt-0.5" />
-                <p className="text-white">
-                  {monitor.regions?.length ?? 0}
-                </p>{" "}
-                <p>{monitor.regions.length > 1 ? "Regions" : "Region"}</p>
-              </span>
+            </span>
+            <span className="flex items-center">
+              <Globe className="w-3 h-3 mt-0.5" />
+              <p className="text-white">{monitor.regions?.length ?? 0}</p>{" "}
+              <p>{monitor.regions.length > 1 ? "Regions" : "Region"}</p>
+            </span>
+          </div>
+
+          {/* Pause Status Indicator */}
+          {isPaused && (
+            <div className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded border border-yellow-400/20">
+              <Pause className="w-3 h-3 inline mr-1" />
+              This monitor is currently paused and not being checked
             </div>
-
-            {/* Pause Status Indicator */}
-            {isPaused && (
-              <div className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded border border-yellow-400/20">
-                <Pause className="w-3 h-3 inline mr-1" />
-                This monitor is currently paused and not being checked
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </Link>
+          )}
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };

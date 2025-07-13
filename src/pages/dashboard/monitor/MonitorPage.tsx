@@ -15,17 +15,14 @@ const MonitorPage = () => {
     );
   }
   const { data: rawUptimeData, isLoading } = getUptimeTrendByMonitorSlug(slug!);
-  const { data: regionStat, isLoading: regionLoading } =
-    getRegionStatsByMonitorSlug(slug!);
+  const { data: regionStat } = getRegionStatsByMonitorSlug(slug!);
   const uptimeData = Array.isArray(rawUptimeData?.trend)
     ? rawUptimeData.trend
     : [];
   const { data: metrics, isLoading: metricsLoading } = getMonitorStatsBySlug(
     slug!
   );
-  if (regionLoading) {
-    return <p>Loading</p>;
-  }
+
   const content = (
     <div className="space-y-6">
       {metricsLoading && (

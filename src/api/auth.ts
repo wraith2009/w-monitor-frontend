@@ -8,7 +8,15 @@ import { toast } from 'sonner';
 export const api = axios.create({
     baseURL: API_BASE_URL,
 });
+interface ForgotPasswordData {
+    email: string
+}
 
+interface ResetPasswordData {
+    token: string
+    newPassword: string
+    confirmPassword: string
+}
 api.interceptors.request.use(injectToken);
 
 api.interceptors.response.use(
@@ -59,6 +67,14 @@ export const authApi = {
     resendVerificationEmail: async (): Promise<void> => {
         console.log('Resending verification email...');
         const response = await api.post('/request-email-verification');
+        return response.data;
+    },
+    forgotPassword: async (data: ForgotPasswordData): Promise<void> => {
+        const response = await api.post('/request-reset-password', data);
+        return response.data;
+    },
+    resetPassword: async (data: ResetPasswordData): Promise<void> => {
+        const response = await api.post('/reset-password', data);
         return response.data;
     },
 };

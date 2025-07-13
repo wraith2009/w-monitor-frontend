@@ -25,7 +25,7 @@ const UptimeChart = ({
   const [, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (!uptimeData.length || isLoading) return;
+    if (!uptimeData.length) return;
 
     // Replace null values with 0
     const processedData = uptimeData.map((point) => ({

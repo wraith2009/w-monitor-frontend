@@ -51,3 +51,29 @@ export const useResendVerificationEmail = () => {
     });
 }
 
+
+
+
+export const useForgotPassword = () => {
+    return useMutation({
+        mutationFn: authApi.forgotPassword,
+        onSuccess: () => {
+            toast.success('Password reset link sent to your email!');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to send reset link');
+        },
+    });
+};
+
+export const useResetPassword = () => {
+    return useMutation({
+        mutationFn: authApi.resetPassword,
+        onSuccess: () => {
+            toast.success('Password has been reset successfully!');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to reset password');
+        },
+    });
+};

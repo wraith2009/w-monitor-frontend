@@ -7,6 +7,8 @@ import ProtectedRoute from "../components/auth/ProtectedRoute";
 import AuthRedirect from "../components/auth/AuthRedirect";
 import LandingPage from "@/pages/landing/landingPage";
 import MonitorPage from "@/pages/dashboard/monitor/MonitorPage";
+import ForgotPassword from "@/pages/auth/ForgetPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
 const AppRoutes = () => {
   return (
     <Routes>
@@ -30,6 +32,22 @@ const AppRoutes = () => {
         element={
           <AuthRedirect>
             <SignUp />
+          </AuthRedirect>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <AuthRedirect>
+            <ForgotPassword />
+          </AuthRedirect>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <AuthRedirect>
+            <ResetPassword />
           </AuthRedirect>
         }
       />

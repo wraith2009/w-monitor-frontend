@@ -5,13 +5,14 @@ import MonitorsTable from "@/components/dashboard/overview/MonitorsTable";
 import { useUptimeTrend } from "@/hooks/useDashboard";
 import { useDashboardMetrics } from "@/hooks/useDashboard";
 import { EmailVerificationBanner } from "@/components/dashboard/EmailVerificationBanner";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
 const DashboardOverview = () => {
   const { data: uptimeData = [], isLoading } = useUptimeTrend();
   const { data: metrics, isLoading: metricLoading } = useDashboardMetrics();
   console.log("loading metrics", metricLoading);
   console.log("loading uptime data", isLoading);
   if (isLoading || metricLoading) {
-    return <div className="space-y-6">Loading</div>;
+    return <LoadingSpinner />;
   }
 
   return (
