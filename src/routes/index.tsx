@@ -5,7 +5,7 @@ import SignIn from "../pages/auth/SignIn";
 import SignUp from "../pages/auth/SignUp";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import AuthRedirect from "../components/auth/AuthRedirect";
-import LandingPage from "@/pages/landing/landingPage";
+import Landing from "@/pages/landing/landingPage";
 import MonitorPage from "@/pages/dashboard/monitor/MonitorPage";
 import ForgotPassword from "@/pages/auth/ForgetPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
@@ -14,7 +14,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       {/* <Route path="/" element={<Landing />} /> */}
-      <Route path="/landing" element={<LandingPage />} />
+      <Route path="/landing" element={<Landing />} />
       <Route path="/monitor/:slug" element={<MonitorPage />} />
 
       {/* Auth Routes - No redirect */}
